@@ -1,0 +1,15 @@
+# Docker volumes and data
+mysql-data/
+company-db-data/
+role-db-data/
+employee-db-data/
+
+# Docker environment
+.env
+
+# Backup files
+*.sql.backup
+*.bak
+
+# Logs
+*.log
