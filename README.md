@@ -190,8 +190,3 @@ If you encounter issues during setup or runtime, follow these steps:
 - ✅ **Stateless UI**: The Shell app maintains zero backend state, relying entirely on the microservice APIs.
 
 ---
-
-## 📝 Author
-
-**Senior Software Developer Candidate**
-Built as a demonstration of scalable, enterprise-grade architecture.
