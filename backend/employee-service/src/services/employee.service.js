@@ -1,5 +1,5 @@
-const EmployeeModel = require('../models/employee.model');
-const httpClient = require('../utils/httpClient');
+const EmployeeModel = require("../models/employee.model");
+const httpClient = require("../utils/httpClient");
 
 /**
  * Employee Business Logic Service
@@ -15,28 +15,34 @@ class EmployeeService {
   static async validateCompanyExists(companyId) {
     try {
       const companyServiceUrl = process.env.COMPANY_SERVICE_URL;
-      
+
       if (!companyServiceUrl) {
-        console.warn('⚠️ COMPANY_SERVICE_URL not configured, skipping validation');
+        console.warn(
+          "⚠️ COMPANY_SERVICE_URL not configured, skipping validation"
+        );
         return true; // Allow creation if service URL not configured
       }
 
-      const response = await httpClient.get(`${companyServiceUrl}/companies/${companyId}`);
-      
+      const response = await httpClient.get(
+        `${companyServiceUrl}/companies/${companyId}`
+      );
+
       if (response.status === 200 && response.data) {
         console.log(`✅ Company validation successful: ${companyId}`);
         return true;
       }
-      
+
       return false;
     } catch (error) {
       if (error.response && error.response.status === 404) {
         throw new Error(`Company with ID ${companyId} does not exist`);
       }
-      
+
       // Log but don't fail if Company Service is down (graceful degradation)
-      console.error('⚠️ Company Service unavailable:', error.message);
-      console.warn('⚠️ Proceeding without company validation (service unavailable)');
+      console.error("⚠️ Company Service unavailable:", error.message);
+      console.warn(
+        "⚠️ Proceeding without company validation (service unavailable)"
+      );
       return true; // Graceful degradation
     }
   }
@@ -50,28 +56,32 @@ class EmployeeService {
   static async validateRoleExists(roleId) {
     try {
       const roleServiceUrl = process.env.ROLE_SERVICE_URL;
-      
+
       if (!roleServiceUrl) {
-        console.warn('⚠️ ROLE_SERVICE_URL not configured, skipping validation');
+        console.warn("⚠️ ROLE_SERVICE_URL not configured, skipping validation");
         return true;
       }
 
-      const response = await httpClient.get(`${roleServiceUrl}/roles/${roleId}`);
-      
+      const response = await httpClient.get(
+        `${roleServiceUrl}/roles/${roleId}`
+      );
+
       if (response.status === 200 && response.data) {
         console.log(`✅ Role validation successful: ${roleId}`);
         return true;
       }
-      
+
       return false;
     } catch (error) {
       if (error.response && error.response.status === 404) {
         throw new Error(`Role with ID ${roleId} does not exist`);
       }
-      
+
       // Graceful degradation
-      console.error('⚠️ Role Service unavailable:', error.message);
-      console.warn('⚠️ Proceeding without role validation (service unavailable)');
+      console.error("⚠️ Role Service unavailable:", error.message);
+      console.warn(
+        "⚠️ Proceeding without role validation (service unavailable)"
+      );
       return true;
     }
   }
@@ -94,8 +104,8 @@ class EmployeeService {
         total,
         limit,
         offset,
-        hasMore: offset + limit < total
-      }
+        hasMore: offset + limit < total,
+      },
     };
   }
 
@@ -107,11 +117,11 @@ class EmployeeService {
    */
   static async getEmployeeById(id) {
     const employee = await EmployeeModel.findById(id);
-    
+
     if (!employee) {
-      throw new Error('Employee not found');
+      throw new Error("Employee not found");
     }
-    
+
     return employee;
   }
 
@@ -123,9 +133,11 @@ class EmployeeService {
    */
   static async createEmployee(employeeData) {
     // Check if email already exists
-    const existingEmployee = await EmployeeModel.findByEmail(employeeData.email);
+    const existingEmployee = await EmployeeModel.findByEmail(
+      employeeData.email
+    );
     if (existingEmployee) {
-      throw new Error('Employee with this email already exists');
+      throw new Error("Employee with this email already exists");
     }
 
     // Validate company exists via inter-service call
@@ -136,7 +148,7 @@ class EmployeeService {
 
     // Create employee
     const employee = await EmployeeModel.create(employeeData);
-    
+
     return employee;
   }
 
@@ -151,14 +163,14 @@ class EmployeeService {
     // Check if employee exists
     const existingEmployee = await EmployeeModel.findById(id);
     if (!existingEmployee) {
-      throw new Error('Employee not found');
+      throw new Error("Employee not found");
     }
 
     // If email is being updated, check uniqueness
     if (updateData.email && updateData.email !== existingEmployee.email) {
       const emailExists = await EmployeeModel.findByEmail(updateData.email);
       if (emailExists) {
-        throw new Error('Employee with this email already exists');
+        throw new Error("Employee with this email already exists");
       }
     }
 
@@ -174,7 +186,7 @@ class EmployeeService {
 
     // Update employee
     const updatedEmployee = await EmployeeModel.update(id, updateData);
-    
+
     return updatedEmployee;
   }
 
@@ -187,7 +199,7 @@ class EmployeeService {
   static async deleteEmployee(id) {
     const employee = await EmployeeModel.findById(id);
     if (!employee) {
-      throw new Error('Employee not found');
+      throw new Error("Employee not found");
     }
 
     const deleted = await EmployeeModel.delete(id);
@@ -202,6 +214,46 @@ class EmployeeService {
   static async getEmployeesByCompany(companyId) {
     const employees = await EmployeeModel.findByCompanyId(companyId);
     return employees;
+  }
+
+  /**
+   * Get employee distribution by role
+   * Resolves role IDs to role titles by calling Role Service
+   * @returns {Promise<Array>} Role stats with titles
+   */
+  static async getRoleStats() {
+    const rawStats = await EmployeeModel.getRoleStats();
+
+    try {
+      const roleServiceUrl = process.env.ROLE_SERVICE_URL;
+      if (!roleServiceUrl) {
+        return rawStats.map((stat) => ({
+          role: stat.role_id,
+          count: stat.count,
+        }));
+      }
+
+      // Fetch all roles to map IDs to titles
+      const response = await httpClient.get(
+        `${roleServiceUrl}/roles?limit=1000`
+      );
+      const roles = response.data.data;
+      const roleMap = roles.reduce((acc, role) => {
+        acc[role.id] = role.title;
+        return acc;
+      }, {});
+
+      return rawStats.map((stat) => ({
+        role: roleMap[stat.role_id] || "Unknown Role",
+        count: stat.count,
+      }));
+    } catch (error) {
+      console.error("⚠️ Error resolving role names for stats:", error.message);
+      return rawStats.map((stat) => ({
+        role: stat.role_id,
+        count: stat.count,
+      }));
+    }
   }
 }
 

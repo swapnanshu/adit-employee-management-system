@@ -235,6 +235,28 @@ class EmployeeModel {
       throw error;
     }
   }
+
+  /**
+   * Get employee distribution by role
+   * @returns {Promise<Array>} Array of role stats { role_id: string, count: number }
+   */
+  static async getRoleStats() {
+    const query = `
+      SELECT 
+        role_id, 
+        COUNT(*) as count
+      FROM employees
+      GROUP BY role_id
+      ORDER BY count DESC
+    `;
+
+    try {
+      const [rows] = await pool.execute(query);
+      return rows;
+    } catch (error) {
+      throw error;
+    }
+  }
 }
 
 module.exports = EmployeeModel;

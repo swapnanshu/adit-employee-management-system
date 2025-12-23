@@ -1,4 +1,4 @@
-const CompanyModel = require('../models/company.model');
+const CompanyModel = require("../models/company.model");
 
 /**
  * Company Business Logic Service
@@ -22,8 +22,8 @@ class CompanyService {
         total,
         limit,
         offset,
-        hasMore: offset + limit < total
-      }
+        hasMore: offset + limit < total,
+      },
     };
   }
 
@@ -35,11 +35,11 @@ class CompanyService {
    */
   static async getCompanyById(id) {
     const company = await CompanyModel.findById(id);
-    
+
     if (!company) {
-      throw new Error('Company not found');
+      throw new Error("Company not found");
     }
-    
+
     return company;
   }
 
@@ -53,11 +53,11 @@ class CompanyService {
     // Check if company with same name already exists
     const existingCompany = await CompanyModel.findByName(companyData.name);
     if (existingCompany) {
-      throw new Error('Company with this name already exists');
+      throw new Error("Company with this name already exists");
     }
 
     const company = await CompanyModel.create(companyData);
-    
+
     return company;
   }
 
@@ -72,19 +72,19 @@ class CompanyService {
     // Check if company exists
     const existingCompany = await CompanyModel.findById(id);
     if (!existingCompany) {
-      throw new Error('Company not found');
+      throw new Error("Company not found");
     }
 
     // If name is being updated, check uniqueness
     if (updateData.name && updateData.name !== existingCompany.name) {
       const nameExists = await CompanyModel.findByName(updateData.name);
       if (nameExists) {
-        throw new Error('Company with this name already exists');
+        throw new Error("Company with this name already exists");
       }
     }
 
     const updatedCompany = await CompanyModel.update(id, updateData);
-    
+
     return updatedCompany;
   }
 
@@ -97,11 +97,19 @@ class CompanyService {
   static async deleteCompany(id) {
     const company = await CompanyModel.findById(id);
     if (!company) {
-      throw new Error('Company not found');
+      throw new Error("Company not found");
     }
 
     const deleted = await CompanyModel.delete(id);
     return deleted;
+  }
+
+  /**
+   * Get company industry distribution stats
+   * @returns {Promise<Array>} Industry stats
+   */
+  static async getIndustryStats() {
+    return await CompanyModel.getIndustryStats();
   }
 }
 

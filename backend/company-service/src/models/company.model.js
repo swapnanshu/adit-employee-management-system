@@ -184,6 +184,28 @@ class CompanyModel {
       throw error;
     }
   }
+
+  /**
+   * Get company distribution by industry
+   * @returns {Promise<Array>} Array of industry stats { industry: string, count: number }
+   */
+  static async getIndustryStats() {
+    const query = `
+      SELECT 
+        industry, 
+        COUNT(*) as count
+      FROM companies
+      GROUP BY industry
+      ORDER BY count DESC
+    `;
+
+    try {
+      const [rows] = await pool.execute(query);
+      return rows;
+    } catch (error) {
+      throw error;
+    }
+  }
 }
 
 module.exports = CompanyModel;

@@ -1,8 +1,18 @@
-import { Component, OnInit } from "@angular/core";
+import {
+  Component,
+  OnInit,
+  AfterViewInit,
+  ViewChild,
+  ElementRef,
+  OnDestroy,
+} from "@angular/core";
 import { CommonModule } from "@angular/common";
 import { RouterLink } from "@angular/router";
 import { HttpClient } from "@angular/common/http";
-import { forkJoin } from "rxjs";
+import { forkJoin, Subscription } from "rxjs";
+import { Chart, registerables } from "chart.js";
+
+Chart.register(...registerables);
 
 interface StatCard {
   title: string;
@@ -81,6 +91,55 @@ interface ApiResponse {
         }
       </div>
 
+      <!-- Charts Section -->
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+        <!-- Industry Chart -->
+        <div class="card overflow-hidden">
+          <div class="p-6 border-b border-slate-100">
+            <h2 class="text-lg font-bold text-slate-900">
+              Companies by Industry
+            </h2>
+            <p class="text-sm text-slate-500">
+              Distribution of organizations across sectors
+            </p>
+          </div>
+          <div class="p-6 relative" style="height: 350px;">
+            @if (loadingCharts) {
+            <div
+              class="absolute inset-0 flex items-center justify-center bg-white bg-opacity-75 z-10"
+            >
+              <div
+                class="animate-spin rounded-full h-10 w-10 border-b-2 border-primary-600"
+              ></div>
+            </div>
+            }
+            <canvas #industryChartCanvas></canvas>
+          </div>
+        </div>
+
+        <!-- Role Chart -->
+        <div class="card overflow-hidden">
+          <div class="p-6 border-b border-slate-100">
+            <h2 class="text-lg font-bold text-slate-900">Employees by Role</h2>
+            <p class="text-sm text-slate-500">
+              Breakdown of human resources by job title
+            </p>
+          </div>
+          <div class="p-6 relative" style="height: 350px;">
+            @if (loadingCharts) {
+            <div
+              class="absolute inset-0 flex items-center justify-center bg-white bg-opacity-75 z-10"
+            >
+              <div
+                class="animate-spin rounded-full h-10 w-10 border-b-2 border-primary-600"
+              ></div>
+            </div>
+            }
+            <canvas #roleChartCanvas></canvas>
+          </div>
+        </div>
+      </div>
+
       <!-- Quick Actions -->
       <section class="card" aria-labelledby="quick-actions-title">
         <h2
@@ -90,17 +149,11 @@ interface ApiResponse {
           Quick Actions
         </h2>
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <a
-            routerLink="/employees"
-            class="text-left p-4 border-2 border-slate-200 rounded-lg hover:border-primary-500 hover:bg-primary-50 transition-all block focus:outline-none focus:ring-2 focus:ring-primary-500"
-          >
+          <a routerLink="/employees" class="action-card">
             <div class="flex items-center space-x-3">
-              <div
-                class="w-10 h-10 bg-primary-100 rounded-lg flex items-center justify-center"
-                aria-hidden="true"
-              >
+              <div class="icon-box bg-primary-100 text-primary-600">
                 <svg
-                  class="w-5 h-5 text-primary-600"
+                  class="w-5 h-5"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -122,17 +175,11 @@ interface ApiResponse {
             </div>
           </a>
 
-          <a
-            routerLink="/companies"
-            class="text-left p-4 border-2 border-slate-200 rounded-lg hover:border-primary-500 hover:bg-primary-50 transition-all block focus:outline-none focus:ring-2 focus:ring-primary-500"
-          >
+          <a routerLink="/companies" class="action-card">
             <div class="flex items-center space-x-3">
-              <div
-                class="w-10 h-10 bg-primary-100 rounded-lg flex items-center justify-center"
-                aria-hidden="true"
-              >
+              <div class="icon-box bg-primary-100 text-primary-600">
                 <svg
-                  class="w-5 h-5 text-primary-600"
+                  class="w-5 h-5"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -155,10 +202,28 @@ interface ApiResponse {
       </section>
     </div>
   `,
-  styles: [],
+  styles: [
+    `
+      .action-card {
+        @apply text-left p-4 border-2 border-slate-200 rounded-lg hover:border-primary-500 hover:bg-primary-50 transition-all block focus:outline-none focus:ring-2 focus:ring-primary-500;
+      }
+      .icon-box {
+        @apply w-10 h-10 rounded-lg flex items-center justify-center;
+      }
+    `,
+  ],
 })
-export class DashboardComponent implements OnInit {
+export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
+  @ViewChild("industryChartCanvas")
+  industryChartCanvas!: ElementRef<HTMLCanvasElement>;
+  @ViewChild("roleChartCanvas") roleChartCanvas!: ElementRef<HTMLCanvasElement>;
+
   loading = true;
+  loadingCharts = true;
+  private industryChart?: Chart;
+  private roleChart?: Chart;
+  private statsSubscription?: Subscription;
+
   stats: StatCard[] = [
     {
       title: "Total Companies",
@@ -183,17 +248,41 @@ export class DashboardComponent implements OnInit {
     },
   ];
 
+  private readonly chartColors = [
+    "#3b82f6",
+    "#10b981",
+    "#f59e0b",
+    "#ef4444",
+    "#8b5cf6",
+    "#ec4899",
+    "#06b6d4",
+    "#84cc16",
+    "#f97316",
+    "#64748b",
+  ];
+
   constructor(private http: HttpClient) {}
 
   ngOnInit() {
     this.loadStats();
   }
 
+  ngAfterViewInit() {
+    // Charts will be initialized once data is loaded
+  }
+
+  ngOnDestroy() {
+    this.statsSubscription?.unsubscribe();
+    this.industryChart?.destroy();
+    this.roleChart?.destroy();
+  }
+
   loadStats() {
     this.loading = true;
+    this.loadingCharts = true;
 
-    // Fetch counts from all 3 services in parallel
-    forkJoin({
+    // Fetch all stats in parallel
+    this.statsSubscription = forkJoin({
       companies: this.http.get<ApiResponse>(
         `http://localhost:3001/api/v1/companies?limit=1`
       ),
@@ -203,8 +292,15 @@ export class DashboardComponent implements OnInit {
       roles: this.http.get<ApiResponse>(
         `http://localhost:3003/api/v1/roles?limit=1`
       ),
+      industryStats: this.http.get<any>(
+        `http://localhost:3001/api/v1/companies/stats/industry`
+      ),
+      roleStats: this.http.get<any>(
+        `http://localhost:3002/api/v1/employees/stats/roles`
+      ),
     }).subscribe({
       next: (results) => {
+        // Update KPI Stats
         this.stats[0].value = (
           results.companies.pagination?.total || 0
         ).toString();
@@ -213,10 +309,113 @@ export class DashboardComponent implements OnInit {
         ).toString();
         this.stats[2].value = (results.roles.pagination?.total || 0).toString();
         this.loading = false;
+
+        // Initialize Charts
+        this.initIndustryChart(results.industryStats.data || []);
+        this.initRoleChart(results.roleStats.data || []);
+        this.loadingCharts = false;
       },
       error: (err) => {
         console.error("Error loading dashboard stats:", err);
         this.loading = false;
+        this.loadingCharts = false;
+      },
+    });
+  }
+
+  private initIndustryChart(data: any[]) {
+    if (!this.industryChartCanvas) return;
+
+    const ctx = this.industryChartCanvas.nativeElement.getContext("2d");
+    if (!ctx) return;
+
+    this.industryChart?.destroy();
+
+    const labels = data.map((item) => item.industry);
+    const counts = data.map((item) => item.count);
+
+    this.industryChart = new Chart(ctx, {
+      type: "pie",
+      data: {
+        labels,
+        datasets: [
+          {
+            data: counts,
+            backgroundColor: this.chartColors,
+            borderWidth: 1,
+            borderColor: "#ffffff",
+          },
+        ],
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: {
+            position: "right",
+            labels: {
+              usePointStyle: true,
+              padding: 20,
+              font: { size: 12 },
+            },
+          },
+          tooltip: {
+            padding: 12,
+            backgroundColor: "rgba(15, 23, 42, 0.9)",
+            titleFont: { size: 14, weight: "bold" },
+            bodyFont: { size: 13 },
+            displayColors: true,
+          },
+        },
+      },
+    });
+  }
+
+  private initRoleChart(data: any[]) {
+    if (!this.roleChartCanvas) return;
+
+    const ctx = this.roleChartCanvas.nativeElement.getContext("2d");
+    if (!ctx) return;
+
+    this.roleChart?.destroy();
+
+    const labels = data.map((item) => item.role);
+    const counts = data.map((item) => item.count);
+
+    this.roleChart = new Chart(ctx, {
+      type: "doughnut",
+      data: {
+        labels,
+        datasets: [
+          {
+            data: counts,
+            backgroundColor: this.chartColors.slice().reverse(),
+            borderWidth: 1,
+            borderColor: "#ffffff",
+          },
+        ],
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        cutout: "60%",
+        plugins: {
+          legend: {
+            position: "right",
+            labels: {
+              usePointStyle: true,
+              padding: 20,
+              font: { size: 12 },
+            },
+          },
+          tooltip: {
+            padding: 12,
+            backgroundColor: "rgba(15, 23, 42, 0.9)",
+            titleFont: { size: 14, weight: "bold" },
+            bodyFont: { size: 13 },
+            displayColors: true,
+          },
+        },
       },
     });
   }

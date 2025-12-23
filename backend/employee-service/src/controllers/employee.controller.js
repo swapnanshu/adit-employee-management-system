@@ -1,4 +1,4 @@
-const EmployeeService = require('../services/employee.service');
+const EmployeeService = require("../services/employee.service");
 
 /**
  * Employee Controller
@@ -12,12 +12,12 @@ class EmployeeController {
   static async getAllEmployees(req, res, next) {
     try {
       const { limit, offset } = req.query;
-      
+
       const result = await EmployeeService.getAllEmployees({ limit, offset });
-      
+
       res.status(200).json({
         success: true,
-        ...result
+        ...result,
       });
     } catch (error) {
       next(error);
@@ -31,12 +31,12 @@ class EmployeeController {
   static async getEmployeeById(req, res, next) {
     try {
       const { id } = req.params;
-      
+
       const employee = await EmployeeService.getEmployeeById(id);
-      
+
       res.status(200).json({
         success: true,
-        data: employee
+        data: employee,
       });
     } catch (error) {
       next(error);
@@ -50,13 +50,13 @@ class EmployeeController {
   static async createEmployee(req, res, next) {
     try {
       const employeeData = req.body;
-      
+
       const employee = await EmployeeService.createEmployee(employeeData);
-      
+
       res.status(201).json({
         success: true,
-        message: 'Employee created successfully',
-        data: employee
+        message: "Employee created successfully",
+        data: employee,
       });
     } catch (error) {
       next(error);
@@ -71,13 +71,13 @@ class EmployeeController {
     try {
       const { id } = req.params;
       const updateData = req.body;
-      
+
       const employee = await EmployeeService.updateEmployee(id, updateData);
-      
+
       res.status(200).json({
         success: true,
-        message: 'Employee updated successfully',
-        data: employee
+        message: "Employee updated successfully",
+        data: employee,
       });
     } catch (error) {
       next(error);
@@ -91,12 +91,12 @@ class EmployeeController {
   static async deleteEmployee(req, res, next) {
     try {
       const { id } = req.params;
-      
+
       await EmployeeService.deleteEmployee(id);
-      
+
       res.status(200).json({
         success: true,
-        message: 'Employee deleted successfully'
+        message: "Employee deleted successfully",
       });
     } catch (error) {
       next(error);
@@ -110,12 +110,29 @@ class EmployeeController {
   static async getEmployeesByCompany(req, res, next) {
     try {
       const { companyId } = req.params;
-      
+
       const employees = await EmployeeService.getEmployeesByCompany(companyId);
-      
+
       res.status(200).json({
         success: true,
-        data: employees
+        data: employees,
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  /**
+   * Get employee distribution by role stats
+   * @route GET /api/v1/employees/stats/roles
+   */
+  static async getRoleStats(req, res, next) {
+    try {
+      const stats = await EmployeeService.getRoleStats();
+
+      res.status(200).json({
+        success: true,
+        data: stats,
       });
     } catch (error) {
       next(error);
