@@ -21,6 +21,9 @@ import {
   template: `
     <div
       class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="modal-title"
     >
       <div
         class="bg-white rounded-lg shadow-xl max-w-md w-full max-h-[90vh] overflow-y-auto"
@@ -28,19 +31,21 @@ import {
         <div
           class="flex items-center justify-between p-6 border-b border-slate-200"
         >
-          <h2 class="text-xl font-bold text-slate-900">
+          <h2 id="modal-title" class="text-xl font-bold text-slate-900">
             {{ employee ? "Edit Employee" : "Add New Employee" }}
           </h2>
           <button
             (click)="onCancel()"
-            class="text-slate-400 hover:text-slate-600"
+            class="text-slate-400 hover:text-slate-600 focus:outline-none focus:ring-2 focus:ring-slate-500 rounded"
             type="button"
+            aria-label="Close modal"
           >
             <svg
               class="w-6 h-6"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
+              aria-hidden="true"
             >
               <path
                 stroke-linecap="round"
@@ -60,7 +65,8 @@ import {
           <!-- First Name -->
           <div>
             <label for="first_name" class="label">
-              First Name <span class="text-red-500">*</span>
+              First Name <span class="text-red-500" aria-hidden="true">*</span>
+              <span class="sr-only">required</span>
             </label>
             <input
               id="first_name"
@@ -72,10 +78,16 @@ import {
                 employeeForm.get('first_name')?.touched
               "
               placeholder="e.g., John"
+              aria-required="true"
+              [attr.aria-describedby]="'first-name-error'"
             />
             @if (employeeForm.get('first_name')?.invalid &&
             employeeForm.get('first_name')?.touched) {
-            <p class="mt-1 text-sm text-red-600">
+            <p
+              id="first-name-error"
+              class="mt-1 text-sm text-red-600"
+              role="alert"
+            >
               @if (employeeForm.get('first_name')?.errors?.['required']) { First
               name is required } @if
               (employeeForm.get('first_name')?.errors?.['minlength']) { First
@@ -87,7 +99,8 @@ import {
           <!-- Last Name -->
           <div>
             <label for="last_name" class="label">
-              Last Name <span class="text-red-500">*</span>
+              Last Name <span class="text-red-500" aria-hidden="true">*</span>
+              <span class="sr-only">required</span>
             </label>
             <input
               id="last_name"
@@ -99,10 +112,16 @@ import {
                 employeeForm.get('last_name')?.touched
               "
               placeholder="e.g., Doe"
+              aria-required="true"
+              [attr.aria-describedby]="'last-name-error'"
             />
             @if (employeeForm.get('last_name')?.invalid &&
             employeeForm.get('last_name')?.touched) {
-            <p class="mt-1 text-sm text-red-600">
+            <p
+              id="last-name-error"
+              class="mt-1 text-sm text-red-600"
+              role="alert"
+            >
               @if (employeeForm.get('last_name')?.errors?.['required']) { Last
               name is required } @if
               (employeeForm.get('last_name')?.errors?.['minlength']) { Last name
@@ -114,7 +133,8 @@ import {
           <!-- Email -->
           <div>
             <label for="email" class="label">
-              Email <span class="text-red-500">*</span>
+              Email <span class="text-red-500" aria-hidden="true">*</span>
+              <span class="sr-only">required</span>
             </label>
             <input
               id="email"
@@ -126,10 +146,12 @@ import {
                 employeeForm.get('email')?.touched
               "
               placeholder="john.doe@example.com"
+              aria-required="true"
+              [attr.aria-describedby]="'email-error'"
             />
             @if (employeeForm.get('email')?.invalid &&
             employeeForm.get('email')?.touched) {
-            <p class="mt-1 text-sm text-red-600">
+            <p id="email-error" class="mt-1 text-sm text-red-600" role="alert">
               @if (employeeForm.get('email')?.errors?.['required']) { Email is
               required } @if (employeeForm.get('email')?.errors?.['email']) {
               Please enter a valid email }
@@ -140,7 +162,8 @@ import {
           <!-- Company Dropdown -->
           <div>
             <label for="company_id" class="label">
-              Company <span class="text-red-500">*</span>
+              Company <span class="text-red-500" aria-hidden="true">*</span>
+              <span class="sr-only">required</span>
             </label>
             <select
               id="company_id"
@@ -150,6 +173,8 @@ import {
                 employeeForm.get('company_id')?.invalid &&
                 employeeForm.get('company_id')?.touched
               "
+              aria-required="true"
+              [attr.aria-describedby]="'company-error'"
             >
               <option value="">Select a company</option>
               @for (company of companies; track company.id) {
@@ -158,14 +183,21 @@ import {
             </select>
             @if (employeeForm.get('company_id')?.invalid &&
             employeeForm.get('company_id')?.touched) {
-            <p class="mt-1 text-sm text-red-600">Company is required</p>
+            <p
+              id="company-error"
+              class="mt-1 text-sm text-red-600"
+              role="alert"
+            >
+              Company is required
+            </p>
             }
           </div>
 
           <!-- Role Dropdown -->
           <div>
             <label for="role_id" class="label">
-              Role <span class="text-red-500">*</span>
+              Role <span class="text-red-500" aria-hidden="true">*</span>
+              <span class="sr-only">required</span>
             </label>
             <select
               id="role_id"
@@ -175,6 +207,8 @@ import {
                 employeeForm.get('role_id')?.invalid &&
                 employeeForm.get('role_id')?.touched
               "
+              aria-required="true"
+              [attr.aria-describedby]="'role-error'"
             >
               <option value="">Select a role</option>
               @for (role of roles; track role.id) {
@@ -183,13 +217,18 @@ import {
             </select>
             @if (employeeForm.get('role_id')?.invalid &&
             employeeForm.get('role_id')?.touched) {
-            <p class="mt-1 text-sm text-red-600">Role is required</p>
+            <p id="role-error" class="mt-1 text-sm text-red-600" role="alert">
+              Role is required
+            </p>
             }
           </div>
 
           <!-- Submit Error -->
           @if (submitError) {
-          <div class="p-3 bg-red-50 border border-red-200 rounded-lg">
+          <div
+            class="p-3 bg-red-50 border border-red-200 rounded-lg"
+            role="alert"
+          >
             <p class="text-sm text-red-600">{{ submitError }}</p>
           </div>
           }
@@ -215,6 +254,7 @@ import {
                   class="animate-spin -ml-1 mr-2 h-4 w-4 text-white"
                   fill="none"
                   viewBox="0 0 24 24"
+                  aria-hidden="true"
                 >
                   <circle
                     class="opacity-25"

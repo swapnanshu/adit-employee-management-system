@@ -33,18 +33,23 @@ interface ApiResponse {
       </div>
 
       <!-- Stats Grid -->
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8" role="list">
         @for (stat of stats; track stat.title) {
-        <div
+        <a
           [routerLink]="stat.route"
-          class="card hover:shadow-md transition-shadow cursor-pointer"
+          class="card hover:shadow-md transition-shadow cursor-pointer block focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2"
+          role="listitem"
+          [attr.aria-label]="stat.title + ': ' + stat.value"
         >
           <div class="flex items-center justify-between">
             <div>
               <p class="text-sm font-medium text-slate-600">{{ stat.title }}</p>
-              <div class="flex items-center mt-2">
+              <div class="flex items-center mt-2" aria-live="polite">
                 @if (loading) {
-                <div class="h-8 w-16 bg-slate-200 animate-pulse rounded"></div>
+                <div
+                  class="h-8 w-16 bg-slate-200 animate-pulse rounded"
+                  aria-label="Loading stats"
+                ></div>
                 } @else {
                 <p class="text-3xl font-bold" [class]="stat.color">
                   {{ stat.value }}
@@ -55,6 +60,7 @@ interface ApiResponse {
             <div
               class="w-12 h-12 rounded-lg flex items-center justify-center"
               [class]="stat.color + ' bg-opacity-10'"
+              aria-hidden="true"
             >
               <svg
                 class="w-6 h-6"
@@ -71,21 +77,27 @@ interface ApiResponse {
               </svg>
             </div>
           </div>
-        </div>
+        </a>
         }
       </div>
 
       <!-- Quick Actions -->
-      <div class="card">
-        <h2 class="text-xl font-bold text-slate-900 mb-4">Quick Actions</h2>
+      <section class="card" aria-labelledby="quick-actions-title">
+        <h2
+          id="quick-actions-title"
+          class="text-xl font-bold text-slate-900 mb-4"
+        >
+          Quick Actions
+        </h2>
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <button
+          <a
             routerLink="/employees"
-            class="text-left p-4 border-2 border-slate-200 rounded-lg hover:border-primary-500 hover:bg-primary-50 transition-all"
+            class="text-left p-4 border-2 border-slate-200 rounded-lg hover:border-primary-500 hover:bg-primary-50 transition-all block focus:outline-none focus:ring-2 focus:ring-primary-500"
           >
             <div class="flex items-center space-x-3">
               <div
                 class="w-10 h-10 bg-primary-100 rounded-lg flex items-center justify-center"
+                aria-hidden="true"
               >
                 <svg
                   class="w-5 h-5 text-primary-600"
@@ -108,15 +120,16 @@ interface ApiResponse {
                 </div>
               </div>
             </div>
-          </button>
+          </a>
 
-          <button
+          <a
             routerLink="/companies"
-            class="text-left p-4 border-2 border-slate-200 rounded-lg hover:border-primary-500 hover:bg-primary-50 transition-all"
+            class="text-left p-4 border-2 border-slate-200 rounded-lg hover:border-primary-500 hover:bg-primary-50 transition-all block focus:outline-none focus:ring-2 focus:ring-primary-500"
           >
             <div class="flex items-center space-x-3">
               <div
                 class="w-10 h-10 bg-primary-100 rounded-lg flex items-center justify-center"
+                aria-hidden="true"
               >
                 <svg
                   class="w-5 h-5 text-primary-600"
@@ -137,9 +150,9 @@ interface ApiResponse {
                 <div class="text-sm text-slate-500">Register a new company</div>
               </div>
             </div>
-          </button>
+          </a>
         </div>
-      </div>
+      </section>
     </div>
   `,
   styles: [],

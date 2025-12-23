@@ -51,15 +51,23 @@ export function CompanyList({ onEdit }: CompanyListProps) {
 
   if (loading) {
     return (
-      <div className="flex justify-center items-center py-12">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600"></div>
+      <div
+        className="flex justify-center items-center py-12"
+        role="status"
+        aria-label="Loading companies"
+      >
+        <div
+          className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600"
+          aria-hidden="true"
+        ></div>
+        <span className="sr-only">Loading...</span>
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="card bg-red-50 border-red-200">
+      <div className="card bg-red-50 border-red-200" role="alert">
         <p className="text-red-600">{error}</p>
         <button onClick={loadCompanies} className="btn-primary mt-4">
           Retry
@@ -76,6 +84,7 @@ export function CompanyList({ onEdit }: CompanyListProps) {
           fill="none"
           stroke="currentColor"
           viewBox="0 0 24 24"
+          aria-hidden="true"
         >
           <path
             strokeLinecap="round"
@@ -96,19 +105,34 @@ export function CompanyList({ onEdit }: CompanyListProps) {
 
   return (
     <div className="overflow-x-auto">
-      <table className="min-w-full bg-white border border-slate-200 rounded-lg">
+      <table
+        className="min-w-full bg-white border border-slate-200 rounded-lg"
+        aria-label="Companies List"
+      >
         <thead className="bg-slate-50 border-b border-slate-200">
           <tr>
-            <th className="px-6 py-3 text-left text-xs font-medium text-slate-700 uppercase tracking-wider">
+            <th
+              scope="col"
+              className="px-6 py-3 text-left text-xs font-medium text-slate-700 uppercase tracking-wider"
+            >
               Company Name
             </th>
-            <th className="px-6 py-3 text-left text-xs font-medium text-slate-700 uppercase tracking-wider">
+            <th
+              scope="col"
+              className="px-6 py-3 text-left text-xs font-medium text-slate-700 uppercase tracking-wider"
+            >
               Industry
             </th>
-            <th className="px-6 py-3 text-left text-xs font-medium text-slate-700 uppercase tracking-wider">
+            <th
+              scope="col"
+              className="px-6 py-3 text-left text-xs font-medium text-slate-700 uppercase tracking-wider"
+            >
               Created
             </th>
-            <th className="px-6 py-3 text-right text-xs font-medium text-slate-700 uppercase tracking-wider">
+            <th
+              scope="col"
+              className="px-6 py-3 text-right text-xs font-medium text-slate-700 uppercase tracking-wider"
+            >
               Actions
             </th>
           </tr>
@@ -135,7 +159,8 @@ export function CompanyList({ onEdit }: CompanyListProps) {
               <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                 <button
                   onClick={() => onEdit(company)}
-                  className="text-primary-600 hover:text-primary-900 mr-4"
+                  className="text-primary-600 hover:text-primary-900 mr-4 focus:outline-none focus:underline"
+                  aria-label={`Edit ${company.name}`}
                 >
                   Edit
                 </button>
@@ -143,13 +168,15 @@ export function CompanyList({ onEdit }: CompanyListProps) {
                   <div className="inline-flex space-x-2">
                     <button
                       onClick={() => handleDelete(company.id)}
-                      className="text-red-600 hover:text-red-900"
+                      className="text-red-600 hover:text-red-900 focus:outline-none focus:underline"
+                      aria-label="Confirm Deletion"
                     >
                       Confirm
                     </button>
                     <button
                       onClick={() => setDeleteConfirm(null)}
-                      className="text-slate-600 hover:text-slate-900"
+                      className="text-slate-600 hover:text-slate-900 focus:outline-none focus:underline"
+                      aria-label="Cancel Deletion"
                     >
                       Cancel
                     </button>
@@ -157,7 +184,8 @@ export function CompanyList({ onEdit }: CompanyListProps) {
                 ) : (
                   <button
                     onClick={() => setDeleteConfirm(company.id)}
-                    className="text-red-600 hover:text-red-900"
+                    className="text-red-600 hover:text-red-900 focus:outline-none focus:underline"
+                    aria-label={`Delete ${company.name}`}
                   >
                     Delete
                   </button>

@@ -97,22 +97,29 @@ export function CompanyForm({
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+    <div
+      className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="modal-title"
+    >
       <div className="bg-white rounded-lg shadow-xl max-w-md w-full">
         <div className="flex items-center justify-between p-6 border-b border-slate-200">
-          <h2 className="text-xl font-bold text-slate-900">
+          <h2 id="modal-title" className="text-xl font-bold text-slate-900">
             {company ? "Edit Company" : "Add New Company"}
           </h2>
           <button
             onClick={onCancel}
-            className="text-slate-400 hover:text-slate-600"
+            className="text-slate-400 hover:text-slate-600 focus:outline-none focus:ring-2 focus:ring-slate-500 rounded"
             disabled={loading}
+            aria-label="Close modal"
           >
             <svg
               className="w-6 h-6"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
+              aria-hidden="true"
             >
               <path
                 strokeLinecap="round"
@@ -128,7 +135,11 @@ export function CompanyForm({
           {/* Company Name */}
           <div>
             <label htmlFor="name" className="label">
-              Company Name <span className="text-red-500">*</span>
+              Company Name{" "}
+              <span className="text-red-500" aria-hidden="true">
+                *
+              </span>
+              <span className="sr-only">required</span>
             </label>
             <input
               id="name"
@@ -142,16 +153,29 @@ export function CompanyForm({
               }
               placeholder="e.g., Tech Innovations Inc"
               disabled={loading}
+              aria-required="true"
+              aria-invalid={!!errors.name}
+              aria-describedby={errors.name ? "name-error" : undefined}
             />
             {errors.name && (
-              <p className="mt-1 text-sm text-red-600">{errors.name}</p>
+              <p
+                id="name-error"
+                className="mt-1 text-sm text-red-600"
+                role="alert"
+              >
+                {errors.name}
+              </p>
             )}
           </div>
 
           {/* Industry */}
           <div>
             <label htmlFor="industry" className="label">
-              Industry <span className="text-red-500">*</span>
+              Industry{" "}
+              <span className="text-red-500" aria-hidden="true">
+                *
+              </span>
+              <span className="sr-only">required</span>
             </label>
             <input
               id="industry"
@@ -165,15 +189,27 @@ export function CompanyForm({
               }
               placeholder="e.g., Technology"
               disabled={loading}
+              aria-required="true"
+              aria-invalid={!!errors.industry}
+              aria-describedby={errors.industry ? "industry-error" : undefined}
             />
             {errors.industry && (
-              <p className="mt-1 text-sm text-red-600">{errors.industry}</p>
+              <p
+                id="industry-error"
+                className="mt-1 text-sm text-red-600"
+                role="alert"
+              >
+                {errors.industry}
+              </p>
             )}
           </div>
 
           {/* Submit Error */}
           {errors.submit && (
-            <div className="p-3 bg-red-50 border border-red-200 rounded-lg">
+            <div
+              className="p-3 bg-red-50 border border-red-200 rounded-lg"
+              role="alert"
+            >
               <p className="text-sm text-red-600">{errors.submit}</p>
             </div>
           )}
@@ -195,6 +231,7 @@ export function CompanyForm({
                     className="animate-spin -ml-1 mr-2 h-4 w-4 text-white"
                     fill="none"
                     viewBox="0 0 24 24"
+                    aria-hidden="true"
                   >
                     <circle
                       className="opacity-25"

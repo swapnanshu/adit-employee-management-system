@@ -48,16 +48,22 @@ interface EmployeeWithDetails extends Employee {
 
         <!-- Loading State -->
         @if (loading) {
-        <div class="flex justify-center items-center py-12">
+        <div
+          class="flex justify-center items-center py-12"
+          role="status"
+          aria-label="Loading employees"
+        >
           <div
             class="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600"
+            aria-hidden="true"
           ></div>
+          <span class="sr-only">Loading...</span>
         </div>
         }
 
         <!-- Error State -->
         @if (error && !loading) {
-        <div class="card bg-red-50 border-red-200">
+        <div class="card bg-red-50 border-red-200" role="alert">
           <p class="text-red-600">{{ error }}</p>
           <button (click)="loadEmployees()" class="btn-primary mt-4">
             Retry
@@ -73,6 +79,7 @@ interface EmployeeWithDetails extends Employee {
             fill="none"
             stroke="currentColor"
             viewBox="0 0 24 24"
+            aria-hidden="true"
           >
             <path
               stroke-linecap="round"
@@ -90,30 +97,35 @@ interface EmployeeWithDetails extends Employee {
         </div>
         } @else {
         <div class="card overflow-x-auto">
-          <table class="min-w-full">
+          <table class="min-w-full" aria-label="Employees List">
             <thead class="bg-slate-50 border-b border-slate-200">
               <tr>
                 <th
+                  scope="col"
                   class="px-6 py-3 text-left text-xs font-medium text-slate-700 uppercase tracking-wider"
                 >
                   Name
                 </th>
                 <th
+                  scope="col"
                   class="px-6 py-3 text-left text-xs font-medium text-slate-700 uppercase tracking-wider"
                 >
                   Email
                 </th>
                 <th
+                  scope="col"
                   class="px-6 py-3 text-left text-xs font-medium text-slate-700 uppercase tracking-wider"
                 >
                   Company
                 </th>
                 <th
+                  scope="col"
                   class="px-6 py-3 text-left text-xs font-medium text-slate-700 uppercase tracking-wider"
                 >
                   Role
                 </th>
                 <th
+                  scope="col"
                   class="px-6 py-3 text-right text-xs font-medium text-slate-700 uppercase tracking-wider"
                 >
                   Actions
@@ -146,27 +158,35 @@ interface EmployeeWithDetails extends Employee {
                 >
                   <button
                     (click)="editEmployee(employee)"
-                    class="text-primary-600 hover:text-primary-900 mr-4"
+                    class="text-primary-600 hover:text-primary-900 mr-4 focus:outline-none focus:underline"
+                    [attr.aria-label]="
+                      'Edit ' + employee.first_name + ' ' + employee.last_name
+                    "
                   >
                     Edit
                   </button>
                   @if (deleteConfirmId === employee.id) {
                   <button
                     (click)="confirmDelete(employee.id)"
-                    class="text-red-600 hover:text-red-900 mr-2"
+                    class="text-red-600 hover:text-red-900 mr-2 focus:outline-none focus:underline"
+                    aria-label="Confirm Deletion"
                   >
                     Confirm
                   </button>
                   <button
                     (click)="cancelDelete()"
-                    class="text-slate-600 hover:text-slate-900"
+                    class="text-slate-600 hover:text-slate-900 focus:outline-none focus:underline"
+                    aria-label="Cancel Deletion"
                   >
                     Cancel
                   </button>
                   } @else {
                   <button
                     (click)="deleteEmployee(employee.id)"
-                    class="text-red-600 hover:text-red-900"
+                    class="text-red-600 hover:text-red-900 focus:outline-none focus:underline"
+                    [attr.aria-label]="
+                      'Delete ' + employee.first_name + ' ' + employee.last_name
+                    "
                   >
                     Delete
                   </button>

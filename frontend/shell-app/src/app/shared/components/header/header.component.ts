@@ -8,12 +8,17 @@ import { CommonModule } from "@angular/common";
   imports: [CommonModule, RouterLink, RouterLinkActive],
   template: `
     <header class="bg-white shadow-sm border-b border-slate-200">
-      <nav class="container mx-auto px-4">
+      <nav class="container mx-auto px-4" aria-label="Main Navigation">
         <div class="flex items-center justify-between h-16">
           <!-- Logo -->
-          <div class="flex items-center space-x-2">
+          <a
+            routerLink="/"
+            class="flex items-center space-x-2 text-slate-900 hover:text-primary-600 transition-colors"
+            aria-label="Office Management Home"
+          >
             <div
-              class="w-8 h-8 bg-  primary-600 rounded-lg flex items-center justify-center"
+              class="w-8 h-8 bg-primary-600 rounded-lg flex items-center justify-center"
+              aria-hidden="true"
             >
               <svg
                 class="w-5 h-5 text-white"
@@ -29,45 +34,50 @@ import { CommonModule } from "@angular/common";
                 ></path>
               </svg>
             </div>
-            <span class="text-xl font-bold text-slate-900"
-              >Office Management</span
-            >
-          </div>
+            <span class="text-xl font-bold">Office Management</span>
+          </a>
 
           <!-- Navigation Links -->
-          <div class="flex space-x-1">
+          <div class="flex space-x-1" role="menubar">
             <a
               routerLink="/dashboard"
               routerLinkActive="bg-primary-50 text-primary-700"
               [routerLinkActiveOptions]="{ exact: true }"
-              class="px-4 py-2 rounded-lg text-slate-700 hover:bg-slate-100 transition-colors font-medium"
+              aria-current-when-active="page"
+              class="px-4 py-2 rounded-lg text-slate-700 hover:bg-slate-100 transition-colors font-medium focus:outline-none focus:ring-2 focus:ring-primary-500"
+              role="menuitem"
             >
               Dashboard
             </a>
             <a
               routerLink="/companies"
               routerLinkActive="bg-primary-50 text-primary-700"
-              class="px-4 py-2 rounded-lg text-slate-700 hover:bg-slate-100 transition-colors font-medium"
+              aria-current-when-active="page"
+              class="px-4 py-2 rounded-lg text-slate-700 hover:bg-slate-100 transition-colors font-medium focus:outline-none focus:ring-2 focus:ring-primary-500"
+              role="menuitem"
             >
               Companies
             </a>
             <a
               routerLink="/employees"
               routerLinkActive="bg-primary-50 text-primary-700"
-              class="px-4 py-2 rounded-lg text-slate-700 hover:bg-slate-100 transition-colors font-medium"
+              aria-current-when-active="page"
+              class="px-4 py-2 rounded-lg text-slate-700 hover:bg-slate-100 transition-colors font-medium focus:outline-none focus:ring-2 focus:ring-primary-500"
+              role="menuitem"
             >
               Employees
             </a>
           </div>
 
           <!-- User Section -->
-          <div class="flex items-center space-x-3">
+          <div class="flex items-center space-x-3" aria-label="User Profile">
             <div class="text-right">
               <p class="text-sm font-medium text-slate-900">Admin User</p>
               <p class="text-xs text-slate-500">Administrator</p>
             </div>
             <div
               class="w-10 h-10 bg-primary-600 rounded-full flex items-center justify-center text-white font-medium"
+              aria-hidden="true"
             >
               A
             </div>
