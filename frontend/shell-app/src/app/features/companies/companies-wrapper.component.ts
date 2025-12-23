@@ -6,6 +6,7 @@ import {
   ViewChild,
 } from "@angular/core";
 import { loadRemoteModule } from "@angular-architects/module-federation-runtime";
+import { environment } from "../../../environments/environment";
 
 @Component({
   selector: "app-companies-wrapper",
@@ -20,7 +21,7 @@ export class CompaniesWrapperComponent implements AfterViewInit, OnDestroy {
     try {
       const m = await loadRemoteModule({
         type: "module",
-        remoteEntry: "http://localhost:4202/assets/remoteEntry.js",
+        remoteEntry: environment.companyMfeUrl,
         exposedModule: "./Component",
       });
 

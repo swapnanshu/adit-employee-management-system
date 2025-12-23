@@ -11,6 +11,7 @@ import { RouterLink } from "@angular/router";
 import { HttpClient } from "@angular/common/http";
 import { forkJoin, Subscription } from "rxjs";
 import { Chart, registerables } from "chart.js";
+import { environment } from "../../../environments/environment";
 
 Chart.register(...registerables);
 
@@ -284,19 +285,19 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
     // Fetch all stats in parallel
     this.statsSubscription = forkJoin({
       companies: this.http.get<ApiResponse>(
-        `http://localhost:3001/api/v1/companies?limit=1`
+        `${environment.companyServiceUrl}/companies?limit=1`
       ),
       employees: this.http.get<ApiResponse>(
-        `http://localhost:3002/api/v1/employees?limit=1`
+        `${environment.employeeServiceUrl}/employees?limit=1`
       ),
       roles: this.http.get<ApiResponse>(
-        `http://localhost:3003/api/v1/roles?limit=1`
+        `${environment.roleServiceUrl}/roles?limit=1`
       ),
       industryStats: this.http.get<any>(
-        `http://localhost:3001/api/v1/companies/stats/industry`
+        `${environment.companyServiceUrl}/companies/stats/industry`
       ),
       roleStats: this.http.get<any>(
-        `http://localhost:3002/api/v1/employees/stats/roles`
+        `${environment.employeeServiceUrl}/employees/stats/roles`
       ),
     }).subscribe({
       next: (results) => {

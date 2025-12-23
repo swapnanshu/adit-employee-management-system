@@ -1,4 +1,5 @@
 import { Routes } from "@angular/router";
+import { environment } from "../environments/environment";
 
 export const routes: Routes = [
   {
@@ -23,7 +24,15 @@ export const routes: Routes = [
   {
     path: "employees",
     loadComponent: () =>
-      import("employeeMfe/Component").then((m) => m.AppComponent),
+      import("@angular-architects/module-federation-runtime")
+        .then((r) =>
+          r.loadRemoteModule({
+            type: "module",
+            remoteEntry: environment.employeeMfeUrl,
+            exposedModule: "./Component",
+          })
+        )
+        .then((m) => m.AppComponent),
   },
   {
     path: "**",
