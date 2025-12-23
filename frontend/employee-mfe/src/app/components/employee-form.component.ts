@@ -13,6 +13,7 @@ import {
   CreateEmployeeDto,
   UpdateEmployeeDto,
 } from "../models/employee.model";
+import { HostListener } from "@angular/core";
 
 @Component({
   selector: "app-employee-form",
@@ -289,6 +290,11 @@ export class EmployeeFormComponent implements OnInit {
   @Input() roles: Role[] = [];
   @Output() success = new EventEmitter<void>();
   @Output() cancel = new EventEmitter<void>();
+
+  @HostListener("window:keydown.escape", ["$event"])
+  onEscape(event: KeyboardEvent) {
+    this.onCancel();
+  }
 
   employeeForm!: FormGroup;
   loading = false;

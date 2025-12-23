@@ -36,6 +36,14 @@ export function CompanyForm({
     setErrors({});
   }, [company]);
 
+  useEffect(() => {
+    const handleEsc = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onCancel();
+    };
+    window.addEventListener("keydown", handleEsc);
+    return () => window.removeEventListener("keydown", handleEsc);
+  }, [onCancel]);
+
   const validate = (): boolean => {
     const newErrors: { [key: string]: string } = {};
 

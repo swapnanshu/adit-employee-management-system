@@ -103,7 +103,7 @@ interface ApiResponse {
               Distribution of organizations across sectors
             </p>
           </div>
-          <div class="p-6 relative" style="height: 350px;">
+          <div class="p-4 sm:p-6 relative" style="height: 400px;">
             @if (loadingCharts) {
             <div
               class="absolute inset-0 flex items-center justify-center bg-white bg-opacity-75 z-10"
@@ -125,7 +125,7 @@ interface ApiResponse {
               Breakdown of human resources by job title
             </p>
           </div>
-          <div class="p-6 relative" style="height: 350px;">
+          <div class="p-4 sm:p-6 relative" style="height: 400px;">
             @if (loadingCharts) {
             <div
               class="absolute inset-0 flex items-center justify-center bg-white bg-opacity-75 z-10"
@@ -352,7 +352,7 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
         maintainAspectRatio: false,
         plugins: {
           legend: {
-            position: "right",
+            position: "bottom",
             labels: {
               usePointStyle: true,
               padding: 20,
@@ -401,7 +401,7 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
         cutout: "60%",
         plugins: {
           legend: {
-            position: "right",
+            position: "bottom",
             labels: {
               usePointStyle: true,
               padding: 20,

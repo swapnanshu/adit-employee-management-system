@@ -19,16 +19,21 @@ interface EmployeeWithDetails extends Employee {
     <div class="min-h-screen bg-slate-50">
       <div class="container mx-auto px-4 py-8">
         <!-- Header -->
-        <div class="flex items-center justify-between mb-8">
+        <div
+          class="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-4 sm:space-y-0 mb-8"
+        >
           <div>
-            <h1 class="text-3xl font-bold text-slate-900">
+            <h1 class="text-2xl sm:text-3xl font-bold text-slate-900">
               Employee Management
             </h1>
             <p class="text-slate-600 mt-1">
               Manage your organization's employees
             </p>
           </div>
-          <button (click)="showAddEmployee()" class="btn-primary">
+          <button
+            (click)="showAddEmployee()"
+            class="btn-primary w-full md:w-fit px-8"
+          >
             <svg
               class="w-5 h-5 inline-block mr-2 -mt-1"
               fill="none"
@@ -165,22 +170,6 @@ interface EmployeeWithDetails extends Employee {
                   >
                     Edit
                   </button>
-                  @if (deleteConfirmId === employee.id) {
-                  <button
-                    (click)="confirmDelete(employee.id)"
-                    class="text-red-600 hover:text-red-900 mr-2 focus:outline-none focus:underline"
-                    aria-label="Confirm Deletion"
-                  >
-                    Confirm
-                  </button>
-                  <button
-                    (click)="cancelDelete()"
-                    class="text-slate-600 hover:text-slate-900 focus:outline-none focus:underline"
-                    aria-label="Cancel Deletion"
-                  >
-                    Cancel
-                  </button>
-                  } @else {
                   <button
                     (click)="deleteEmployee(employee.id)"
                     class="text-red-600 hover:text-red-900 focus:outline-none focus:underline"
@@ -190,7 +179,6 @@ interface EmployeeWithDetails extends Employee {
                   >
                     Delete
                   </button>
-                  }
                 </td>
               </tr>
               }
@@ -208,6 +196,39 @@ interface EmployeeWithDetails extends Employee {
           (success)="handleFormSuccess()"
           (cancel)="handleFormCancel()"
         ></app-employee-form>
+        }
+
+        <!-- Delete Confirmation Modal -->
+        @if (deleteConfirmId) {
+        <div
+          class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-[60]"
+          role="dialog"
+          aria-modal="true"
+          (keydown.escape)="cancelDelete()"
+          tabindex="-1"
+          #deleteModal
+        >
+          <div class="bg-white rounded-lg shadow-xl max-w-sm w-full p-6">
+            <h3 class="text-lg font-bold text-slate-900 mb-2">
+              Confirm Deletion
+            </h3>
+            <p class="text-slate-600 mb-6">
+              Are you sure you want to delete this employee? This action cannot
+              be undone.
+            </p>
+            <div class="flex justify-end space-x-3">
+              <button (click)="cancelDelete()" class="btn-secondary">
+                Cancel
+              </button>
+              <button
+                (click)="confirmDelete(deleteConfirmId)"
+                class="bg-red-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-red-700 transition-colors"
+              >
+                Delete
+              </button>
+            </div>
+          </div>
+        </div>
         }
       </div>
     </div>

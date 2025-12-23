@@ -4,13 +4,13 @@ import { companyService } from "../services/companyService";
 
 interface CompanyListProps {
   onEdit: (company: Company) => void;
+  onDelete: (id: string) => void;
 }
 
-export function CompanyList({ onEdit }: CompanyListProps) {
+export function CompanyList({ onEdit, onDelete }: CompanyListProps) {
   const [companies, setCompanies] = useState<Company[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
 
   useEffect(() => {
     loadCompanies();
@@ -27,17 +27,6 @@ export function CompanyList({ onEdit }: CompanyListProps) {
       console.error("Error loading companies:", err);
     } finally {
       setLoading(false);
-    }
-  };
-
-  const handleDelete = async (id: string) => {
-    try {
-      await companyService.delete(id);
-      setCompanies(companies.filter((c) => c.id !== id));
-      setDeleteConfirm(null);
-    } catch (err) {
-      alert("Failed to delete company. It may have associated employees.");
-      console.error("Error deleting company:", err);
     }
   };
 
@@ -164,32 +153,13 @@ export function CompanyList({ onEdit }: CompanyListProps) {
                 >
                   Edit
                 </button>
-                {deleteConfirm === company.id ? (
-                  <div className="inline-flex space-x-2">
-                    <button
-                      onClick={() => handleDelete(company.id)}
-                      className="text-red-600 hover:text-red-900 focus:outline-none focus:underline"
-                      aria-label="Confirm Deletion"
-                    >
-                      Confirm
-                    </button>
-                    <button
-                      onClick={() => setDeleteConfirm(null)}
-                      className="text-slate-600 hover:text-slate-900 focus:outline-none focus:underline"
-                      aria-label="Cancel Deletion"
-                    >
-                      Cancel
-                    </button>
-                  </div>
-                ) : (
-                  <button
-                    onClick={() => setDeleteConfirm(company.id)}
-                    className="text-red-600 hover:text-red-900 focus:outline-none focus:underline"
-                    aria-label={`Delete ${company.name}`}
-                  >
-                    Delete
-                  </button>
-                )}
+                <button
+                  onClick={() => onDelete(company.id)}
+                  className="text-red-600 hover:text-red-900 focus:outline-none focus:underline"
+                  aria-label={`Delete ${company.name}`}
+                >
+                  Delete
+                </button>
               </td>
             </tr>
           ))}
