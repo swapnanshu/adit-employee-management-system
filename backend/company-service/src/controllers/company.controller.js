@@ -11,10 +11,16 @@ class CompanyController {
    */
   static async getAllCompanies(req, res, next) {
     try {
-      console.log(req.query);
-      const { limit, offset } = req.query;
+      const { limit, offset, search, industry, sortBy, sortOrder } = req.query;
 
-      const result = await CompanyService.getAllCompanies({ limit, offset });
+      const result = await CompanyService.getAllCompanies({
+        limit,
+        offset,
+        search,
+        industry,
+        sortBy,
+        sortOrder,
+      });
 
       res.status(200).json({
         success: true,

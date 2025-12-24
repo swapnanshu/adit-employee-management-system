@@ -1,29 +1,44 @@
-const RoleModel = require('../models/role.model');
+const RoleModel = require("../models/role.model");
 
 /**
  * Role Business Logic Service
  */
 class RoleService {
   /**
-   * Get all roles
+   * Get all roles with filtering and sorting
    * @param {Object} options - Query options
    * @returns {Promise<Object>} Roles with pagination metadata
    */
   static async getAllRoles(options = {}) {
-    const limit = parseInt(options.limit) || 100;
-    const offset = parseInt(options.offset) || 0;
+    const {
+      limit = 100,
+      offset = 0,
+      search = "",
+      sortBy = "created_at",
+      sortOrder = "DESC",
+    } = options;
 
-    const roles = await RoleModel.findAll(limit, offset);
-    const total = await RoleModel.count();
+    const limitInt = parseInt(limit) || 100;
+    const offsetInt = parseInt(offset) || 0;
+
+    const roles = await RoleModel.findAll({
+      limit: limitInt,
+      offset: offsetInt,
+      search,
+      sortBy,
+      sortOrder,
+    });
+
+    const total = await RoleModel.count({ search });
 
     return {
       data: roles,
       pagination: {
         total,
-        limit,
-        offset,
-        hasMore: offset + limit < total
-      }
+        limit: limitInt,
+        offset: offsetInt,
+        hasMore: offsetInt + limitInt < total,
+      },
     };
   }
 
@@ -35,11 +50,11 @@ class RoleService {
    */
   static async getRoleById(id) {
     const role = await RoleModel.findById(id);
-    
+
     if (!role) {
-      throw new Error('Role not found');
+      throw new Error("Role not found");
     }
-    
+
     return role;
   }
 
@@ -53,11 +68,11 @@ class RoleService {
     // Check if role with same title already exists
     const existingRole = await RoleModel.findByTitle(roleData.title);
     if (existingRole) {
-      throw new Error('Role with this title already exists');
+      throw new Error("Role with this title already exists");
     }
 
     const role = await RoleModel.create(roleData);
-    
+
     return role;
   }
 
@@ -72,19 +87,19 @@ class RoleService {
     // Check if role exists
     const existingRole = await RoleModel.findById(id);
     if (!existingRole) {
-      throw new Error('Role not found');
+      throw new Error("Role not found");
     }
 
     // If title is being updated, check uniqueness
     if (updateData.title && updateData.title !== existingRole.title) {
       const titleExists = await RoleModel.findByTitle(updateData.title);
       if (titleExists) {
-        throw new Error('Role with this title already exists');
+        throw new Error("Role with this title already exists");
       }
     }
 
     const updatedRole = await RoleModel.update(id, updateData);
-    
+
     return updatedRole;
   }
 
@@ -97,7 +112,7 @@ class RoleService {
   static async deleteRole(id) {
     const role = await RoleModel.findById(id);
     if (!role) {
-      throw new Error('Role not found');
+      throw new Error("Role not found");
     }
 
     const deleted = await RoleModel.delete(id);

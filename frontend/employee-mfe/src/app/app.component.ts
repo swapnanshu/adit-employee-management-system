@@ -1,5 +1,7 @@
 import { Component, OnInit, ViewChild } from "@angular/core";
 import { CommonModule } from "@angular/common";
+import { Subject } from "rxjs";
+import { debounceTime } from "rxjs/operators";
 import { EmployeeService } from "./services/employee.service";
 import { CompanyService } from "./services/company.service";
 import { RoleService } from "./services/role.service";
@@ -51,6 +53,61 @@ interface EmployeeWithDetails extends Employee {
           </button>
         </div>
 
+        <!-- Search and Filters -->
+        <div class="mb-6 flex flex-col md:flex-row gap-4">
+          <!-- Search -->
+          <div class="relative flex-1">
+            <input
+              type="text"
+              placeholder="Search employees..."
+              (input)="onSearch($event)"
+              class="w-full pl-10 pr-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none transition-all shadow-sm"
+              [value]="searchTerm"
+            />
+            <svg
+              class="absolute left-3 top-2.5 h-5 w-5 text-slate-400"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+              />
+            </svg>
+          </div>
+
+          <!-- Company Filter -->
+          <div class="w-full md:w-64">
+            <select
+              (change)="onFilterChange('company', $event)"
+              class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none transition-all shadow-sm bg-white"
+              [value]="filterCompanyId"
+            >
+              <option value="">All Companies</option>
+              @for (company of companies; track company.id) {
+              <option [value]="company.id">{{ company.name }}</option>
+              }
+            </select>
+          </div>
+
+          <!-- Role Filter -->
+          <div class="w-full md:w-64">
+            <select
+              (change)="onFilterChange('role', $event)"
+              class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none transition-all shadow-sm bg-white"
+              [value]="filterRoleId"
+            >
+              <option value="">All Roles</option>
+              @for (role of roles; track role.id) {
+              <option [value]="role.id">{{ role.title }}</option>
+              }
+            </select>
+          </div>
+        </div>
+
         <!-- Loading State -->
         @if (loading) {
         <div
@@ -94,28 +151,50 @@ interface EmployeeWithDetails extends Employee {
             />
           </svg>
           <h3 class="mt-2 text-lg font-medium text-slate-900">
-            No employees yet
+            {{
+              searchTerm || filterCompanyId || filterRoleId
+                ? "No employees found"
+                : "No employees yet"
+            }}
           </h3>
           <p class="mt-1 text-sm text-slate-500">
-            Get started by adding a new employee.
+            {{
+              searchTerm || filterCompanyId || filterRoleId
+                ? "Try adjusting your filters."
+                : "Get started by adding a new employee."
+            }}
           </p>
         </div>
         } @else {
-        <div class="card overflow-x-auto">
+        <div class="card overflow-x-auto p-0">
           <table class="min-w-full" aria-label="Employees List">
             <thead class="bg-slate-50 border-b border-slate-200">
               <tr>
                 <th
                   scope="col"
-                  class="px-6 py-3 text-left text-xs font-medium text-slate-700 uppercase tracking-wider"
+                  (click)="onSort('first_name')"
+                  class="px-6 py-3 text-left text-xs font-medium text-slate-700 uppercase tracking-wider cursor-pointer hover:bg-slate-100 transition-colors"
                 >
                   Name
+                  <span
+                    class="ml-1"
+                    [class.text-primary-600]="sortConfig.key === 'first_name'"
+                  >
+                    {{ getSortIcon("first_name") }}
+                  </span>
                 </th>
                 <th
                   scope="col"
-                  class="px-6 py-3 text-left text-xs font-medium text-slate-700 uppercase tracking-wider"
+                  (click)="onSort('email')"
+                  class="px-6 py-3 text-left text-xs font-medium text-slate-700 uppercase tracking-wider cursor-pointer hover:bg-slate-100 transition-colors"
                 >
                   Email
+                  <span
+                    class="ml-1"
+                    [class.text-primary-600]="sortConfig.key === 'email'"
+                  >
+                    {{ getSortIcon("email") }}
+                  </span>
                 </th>
                 <th
                   scope="col"
@@ -247,11 +326,27 @@ export class AppComponent implements OnInit {
   showForm = false;
   selectedEmployee: Employee | null = null;
 
+  // Search & Filter State
+  searchTerm = "";
+  filterCompanyId = "";
+  filterRoleId = "";
+  sortConfig: { key: string; direction: "ASC" | "DESC" } = {
+    key: "created_at",
+    direction: "DESC",
+  };
+
+  private searchSubject = new Subject<string>();
+
   constructor(
     private employeeService: EmployeeService,
     private companyService: CompanyService,
     private roleService: RoleService
-  ) {}
+  ) {
+    this.searchSubject.pipe(debounceTime(300)).subscribe((term) => {
+      this.searchTerm = term;
+      this.loadEmployees();
+    });
+  }
 
   ngOnInit() {
     this.loadData();
@@ -266,7 +361,15 @@ export class AppComponent implements OnInit {
     this.error = null;
 
     Promise.all([
-      this.employeeService.getAll().toPromise(),
+      this.employeeService
+        .getAll({
+          search: this.searchTerm,
+          company_id: this.filterCompanyId,
+          role_id: this.filterRoleId,
+          sortBy: this.sortConfig.key,
+          sortOrder: this.sortConfig.direction,
+        })
+        .toPromise(),
       this.companyService.getAll().toPromise(),
       this.roleService.getAll().toPromise(),
     ])
@@ -288,6 +391,34 @@ export class AppComponent implements OnInit {
         this.error = "Failed to load employees. Please try again.";
         this.loading = false;
       });
+  }
+
+  onSearch(event: Event) {
+    const input = event.target as HTMLInputElement;
+    this.searchSubject.next(input.value);
+  }
+
+  onFilterChange(type: "company" | "role", event: Event) {
+    const value = (event.target as HTMLSelectElement).value;
+    if (type === "company") this.filterCompanyId = value;
+    else if (type === "role") this.filterRoleId = value;
+    this.loadEmployees();
+  }
+
+  onSort(key: string) {
+    if (this.sortConfig.key === key) {
+      this.sortConfig.direction =
+        this.sortConfig.direction === "ASC" ? "DESC" : "ASC";
+    } else {
+      this.sortConfig.key = key;
+      this.sortConfig.direction = "ASC";
+    }
+    this.loadEmployees();
+  }
+
+  getSortIcon(key: string): string {
+    if (this.sortConfig.key !== key) return "↕";
+    return this.sortConfig.direction === "ASC" ? "↑" : "↓";
   }
 
   showAddEmployee() {

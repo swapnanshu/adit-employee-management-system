@@ -18,10 +18,26 @@ const apiClient = axios.create({
 
 export const companyService = {
   /**
-   * Get all companies
+   * Get all companies with optional filtering and sorting
    */
-  async getAll(): Promise<Company[]> {
-    const response = await apiClient.get<ApiResponse<Company[]>>("/companies");
+  async getAll(
+    params: {
+      search?: string;
+      industry?: string;
+      sortBy?: string;
+      sortOrder?: string;
+    } = {}
+  ): Promise<Company[]> {
+    const queryParams = new URLSearchParams();
+    if (params.search) queryParams.append("search", params.search);
+    if (params.industry) queryParams.append("industry", params.industry);
+    if (params.sortBy) queryParams.append("sortBy", params.sortBy);
+    if (params.sortOrder) queryParams.append("sortOrder", params.sortOrder);
+
+    const url = `/companies${
+      queryParams.toString() ? `?${queryParams.toString()}` : ""
+    }`;
+    const response = await apiClient.get<ApiResponse<Company[]>>(url);
     return response.data.data || [];
   },
 

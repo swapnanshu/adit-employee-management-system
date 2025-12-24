@@ -5,24 +5,41 @@ const CompanyModel = require("../models/company.model");
  */
 class CompanyService {
   /**
-   * Get all companies
+   * Get all companies with filtering and sorting
    * @param {Object} options - Query options
    * @returns {Promise<Object>} Companies with pagination metadata
    */
   static async getAllCompanies(options = {}) {
-    const limit = parseInt(options.limit) || 100;
-    const offset = parseInt(options.offset) || 0;
+    const {
+      limit = 100,
+      offset = 0,
+      search = "",
+      industry = "",
+      sortBy = "created_at",
+      sortOrder = "DESC",
+    } = options;
 
-    const companies = await CompanyModel.findAll(limit, offset);
-    const total = await CompanyModel.count();
+    const limitInt = parseInt(limit) || 100;
+    const offsetInt = parseInt(offset) || 0;
+
+    const companies = await CompanyModel.findAll({
+      limit: limitInt,
+      offset: offsetInt,
+      search,
+      industry,
+      sortBy,
+      sortOrder,
+    });
+
+    const total = await CompanyModel.count({ search, industry });
 
     return {
       data: companies,
       pagination: {
         total,
-        limit,
-        offset,
-        hasMore: offset + limit < total,
+        limit: limitInt,
+        offset: offsetInt,
+        hasMore: offsetInt + limitInt < total,
       },
     };
   }

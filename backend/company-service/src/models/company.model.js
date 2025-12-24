@@ -7,31 +7,64 @@ const { v4: uuidv4 } = require("uuid");
  */
 class CompanyModel {
   /**
-   * Find all companies with optional pagination
-   * @param {number} limit - Maximum number of records to return
-   * @param {number} offset - Number of records to skip
+   * Find all companies with optional filtering, sorting, and pagination
+   * @param {Object} options - Query options
+   * @param {number} options.limit - Maximum number of records to return
+   * @param {number} options.offset - Number of records to skip
+   * @param {string} options.search - Search term for company name
+   * @param {string} options.industry - Industry filter
+   * @param {string} options.sortBy - Column to sort by
+   * @param {string} options.sortOrder - Sort order (ASC or DESC)
    * @returns {Promise<Array>} Array of company objects
    */
-  static async findAll(limit = 100, offset = 0) {
+  static async findAll({
+    limit = 100,
+    offset = 0,
+    search = "",
+    industry = "",
+    sortBy = "created_at",
+    sortOrder = "DESC",
+  } = {}) {
     // Ensure parameters are integers to prevent SQL injection
     const limitInt = parseInt(limit, 10) || 100;
     const offsetInt = parseInt(offset, 10) || 0;
 
-    // Build query with LIMIT/OFFSET directly (safe because values are validated integers)
-    const query = `
-      SELECT 
-        id, 
-        name, 
-        industry, 
-        created_at, 
-        updated_at
+    // Validate sort order
+    const order =
+      typeof sortOrder === "string" && sortOrder.toUpperCase() === "ASC"
+        ? "ASC"
+        : "DESC";
+
+    // Whitelist allowed sort columns
+    const allowedSortFields = ["name", "industry", "created_at"];
+    const sortField = allowedSortFields.includes(sortBy)
+      ? sortBy
+      : "created_at";
+
+    let query = `
+      SELECT id, name, industry, created_at, updated_at
       FROM companies
-      ORDER BY created_at DESC
+      WHERE 1=1
+    `;
+    const params = [];
+
+    if (search) {
+      query += ` AND name LIKE ?`;
+      params.push(`%${search}%`);
+    }
+
+    if (industry) {
+      query += ` AND industry = ?`;
+      params.push(industry);
+    }
+
+    query += `
+      ORDER BY ${sortField} ${order}
       LIMIT ${limitInt} OFFSET ${offsetInt}
     `;
 
     try {
-      const [rows] = await pool.execute(query);
+      const [rows] = await pool.execute(query, params);
       return rows;
     } catch (error) {
       throw error;
@@ -171,14 +204,26 @@ class CompanyModel {
   }
 
   /**
-   * Get total count of companies
+   * Get total count of companies with optional filtering
+   * @param {Object} options - Filter options
    * @returns {Promise<number>} Total count
    */
-  static async count() {
-    const query = "SELECT COUNT(*) as total FROM companies";
+  static async count({ search = "", industry = "" } = {}) {
+    let query = "SELECT COUNT(*) as total FROM companies WHERE 1=1";
+    const params = [];
+
+    if (search) {
+      query += ` AND name LIKE ?`;
+      params.push(`%${search}%`);
+    }
+
+    if (industry) {
+      query += ` AND industry = ?`;
+      params.push(industry);
+    }
 
     try {
-      const [rows] = await pool.execute(query);
+      const [rows] = await pool.execute(query, params);
       return rows[0].total;
     } catch (error) {
       throw error;

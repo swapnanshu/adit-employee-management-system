@@ -1,4 +1,4 @@
-const RoleService = require('../services/role.service');
+const RoleService = require("../services/role.service");
 
 /**
  * Role Controller
@@ -11,13 +11,19 @@ class RoleController {
    */
   static async getAllRoles(req, res, next) {
     try {
-      const { limit, offset } = req.query;
-      
-      const result = await RoleService.getAllRoles({ limit, offset });
-      
+      const { limit, offset, search, sortBy, sortOrder } = req.query;
+
+      const result = await RoleService.getAllRoles({
+        limit,
+        offset,
+        search,
+        sortBy,
+        sortOrder,
+      });
+
       res.status(200).json({
         success: true,
-        ...result
+        ...result,
       });
     } catch (error) {
       next(error);
@@ -31,12 +37,12 @@ class RoleController {
   static async getRoleById(req, res, next) {
     try {
       const { id } = req.params;
-      
+
       const role = await RoleService.getRoleById(id);
-      
+
       res.status(200).json({
         success: true,
-        data: role
+        data: role,
       });
     } catch (error) {
       next(error);
@@ -50,13 +56,13 @@ class RoleController {
   static async createRole(req, res, next) {
     try {
       const roleData = req.body;
-      
+
       const role = await RoleService.createRole(roleData);
-      
+
       res.status(201).json({
         success: true,
-        message: 'Role created successfully',
-        data: role
+        message: "Role created successfully",
+        data: role,
       });
     } catch (error) {
       next(error);
@@ -71,13 +77,13 @@ class RoleController {
     try {
       const { id } = req.params;
       const updateData = req.body;
-      
+
       const role = await RoleService.updateRole(id, updateData);
-      
+
       res.status(200).json({
         success: true,
-        message: 'Role updated successfully',
-        data: role
+        message: "Role updated successfully",
+        data: role,
       });
     } catch (error) {
       next(error);
@@ -91,12 +97,12 @@ class RoleController {
   static async deleteRole(req, res, next) {
     try {
       const { id } = req.params;
-      
+
       await RoleService.deleteRole(id);
-      
+
       res.status(200).json({
         success: true,
-        message: 'Role deleted successfully'
+        message: "Role deleted successfully",
       });
     } catch (error) {
       next(error);

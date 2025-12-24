@@ -7,34 +7,78 @@ const { v4: uuidv4 } = require("uuid");
  */
 class EmployeeModel {
   /**
-   * Find all employees with optional pagination
-   * @param {number} limit - Maximum number of records to return
-   * @param {number} offset - Number of records to skip
+   * Find all employees with optional filtering, sorting, and pagination
+   * @param {Object} options - Query options
+   * @param {number} options.limit - Maximum number of records to return
+   * @param {number} options.offset - Number of records to skip
+   * @param {string} options.search - Search term for name or email
+   * @param {string} options.company_id - Company filter
+   * @param {string} options.role_id - Role filter
+   * @param {string} options.sortBy - Column to sort by
+   * @param {string} options.sortOrder - Sort order (ASC or DESC)
    * @returns {Promise<Array>} Array of employee objects
    */
-  static async findAll(limit = 100, offset = 0) {
+  static async findAll({
+    limit = 100,
+    offset = 0,
+    search = "",
+    company_id = "",
+    role_id = "",
+    sortBy = "created_at",
+    sortOrder = "DESC",
+  } = {}) {
     // Ensure parameters are integers to prevent SQL injection
     const limitInt = parseInt(limit, 10) || 100;
     const offsetInt = parseInt(offset, 10) || 0;
 
-    // Build query with LIMIT/OFFSET directly (safe because values are validated integers)
-    const query = `
-      SELECT 
-        id, 
-        first_name, 
-        last_name, 
-        email, 
-        company_id, 
-        role_id, 
-        created_at, 
-        updated_at
+    // Validate sort order
+    const order =
+      typeof sortOrder === "string" && sortOrder.toUpperCase() === "ASC"
+        ? "ASC"
+        : "DESC";
+
+    // Whitelist allowed sort columns
+    const allowedSortFields = [
+      "first_name",
+      "last_name",
+      "email",
+      "created_at",
+      "updated_at",
+    ];
+    const sortField = allowedSortFields.includes(sortBy)
+      ? sortBy
+      : "created_at";
+
+    let query = `
+      SELECT id, first_name, last_name, email, company_id, role_id, created_at, updated_at
       FROM employees
-      ORDER BY created_at DESC
+      WHERE 1=1
+    `;
+    const params = [];
+
+    if (search) {
+      query += ` AND (first_name LIKE ? OR last_name LIKE ? OR email LIKE ?)`;
+      const searchParam = `%${search}%`;
+      params.push(searchParam, searchParam, searchParam);
+    }
+
+    if (company_id) {
+      query += ` AND company_id = ?`;
+      params.push(company_id);
+    }
+
+    if (role_id) {
+      query += ` AND role_id = ?`;
+      params.push(role_id);
+    }
+
+    query += `
+      ORDER BY ${sortField} ${order}
       LIMIT ${limitInt} OFFSET ${offsetInt}
     `;
 
     try {
-      const [rows] = await pool.execute(query);
+      const [rows] = await pool.execute(query, params);
       return rows;
     } catch (error) {
       throw error;
@@ -222,14 +266,32 @@ class EmployeeModel {
   }
 
   /**
-   * Get total count of employees
+   * Get total count of employees with optional filtering
+   * @param {Object} options - Filter options
    * @returns {Promise<number>} Total count
    */
-  static async count() {
-    const query = "SELECT COUNT(*) as total FROM employees";
+  static async count({ search = "", company_id = "", role_id = "" } = {}) {
+    let query = "SELECT COUNT(*) as total FROM employees WHERE 1=1";
+    const params = [];
+
+    if (search) {
+      query += ` AND (first_name LIKE ? OR last_name LIKE ? OR email LIKE ?)`;
+      const searchParam = `%${search}%`;
+      params.push(searchParam, searchParam, searchParam);
+    }
+
+    if (company_id) {
+      query += ` AND company_id = ?`;
+      params.push(company_id);
+    }
+
+    if (role_id) {
+      query += ` AND role_id = ?`;
+      params.push(role_id);
+    }
 
     try {
-      const [rows] = await pool.execute(query);
+      const [rows] = await pool.execute(query, params);
       return rows[0].total;
     } catch (error) {
       throw error;

@@ -87,24 +87,43 @@ class EmployeeService {
   }
 
   /**
-   * Get all employees
+   * Get all employees with filtering and sorting
    * @param {Object} options - Query options
    * @returns {Promise<Object>} Employees with pagination metadata
    */
   static async getAllEmployees(options = {}) {
-    const limit = parseInt(options.limit) || 100;
-    const offset = parseInt(options.offset) || 0;
+    const {
+      limit = 100,
+      offset = 0,
+      search = "",
+      company_id = "",
+      role_id = "",
+      sortBy = "created_at",
+      sortOrder = "DESC",
+    } = options;
 
-    const employees = await EmployeeModel.findAll(limit, offset);
-    const total = await EmployeeModel.count();
+    const limitInt = parseInt(limit) || 100;
+    const offsetInt = parseInt(offset) || 0;
+
+    const employees = await EmployeeModel.findAll({
+      limit: limitInt,
+      offset: offsetInt,
+      search,
+      company_id,
+      role_id,
+      sortBy,
+      sortOrder,
+    });
+
+    const total = await EmployeeModel.count({ search, company_id, role_id });
 
     return {
       data: employees,
       pagination: {
         total,
-        limit,
-        offset,
-        hasMore: offset + limit < total,
+        limit: limitInt,
+        offset: offsetInt,
+        hasMore: offsetInt + limitInt < total,
       },
     };
   }

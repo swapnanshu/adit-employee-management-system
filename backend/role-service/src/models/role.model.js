@@ -7,31 +7,52 @@ const { v4: uuidv4 } = require("uuid");
  */
 class RoleModel {
   /**
-   * Find all roles with optional pagination
-   * @param {number} limit - Maximum number of records to return
-   * @param {number} offset - Number of records to skip
+   * Find all roles with optional filtering, sorting, and pagination
+   * @param {Object} options - Query options
    * @returns {Promise<Array>} Array of role objects
    */
-  static async findAll(limit = 100, offset = 0) {
+  static async findAll({
+    limit = 100,
+    offset = 0,
+    search = "",
+    sortBy = "created_at",
+    sortOrder = "DESC",
+  } = {}) {
     // Ensure parameters are integers to prevent SQL injection
     const limitInt = parseInt(limit, 10) || 100;
     const offsetInt = parseInt(offset, 10) || 0;
 
-    // Build query with LIMIT/OFFSET directly (safe because values are validated integers)
-    const query = `
-      SELECT 
-        id, 
-        title, 
-        description, 
-        created_at, 
-        updated_at
+    // Validate sort order
+    const order =
+      typeof sortOrder === "string" && sortOrder.toUpperCase() === "ASC"
+        ? "ASC"
+        : "DESC";
+
+    // Whitelist allowed sort columns
+    const allowedSortFields = ["title", "created_at"];
+    const sortField = allowedSortFields.includes(sortBy)
+      ? sortBy
+      : "created_at";
+
+    let query = `
+      SELECT id, title, description, created_at, updated_at
       FROM roles
-      ORDER BY created_at DESC
+      WHERE 1=1
+    `;
+    const params = [];
+
+    if (search) {
+      query += ` AND title LIKE ?`;
+      params.push(`%${search}%`);
+    }
+
+    query += `
+      ORDER BY ${sortField} ${order}
       LIMIT ${limitInt} OFFSET ${offsetInt}
     `;
 
     try {
-      const [rows] = await pool.execute(query);
+      const [rows] = await pool.execute(query, params);
       return rows;
     } catch (error) {
       throw error;
@@ -171,14 +192,21 @@ class RoleModel {
   }
 
   /**
-   * Get total count of roles
+   * Get total count of roles with optional filtering
+   * @param {Object} options - Filter options
    * @returns {Promise<number>} Total count
    */
-  static async count() {
-    const query = "SELECT COUNT(*) as total FROM roles";
+  static async count({ search = "" } = {}) {
+    let query = "SELECT COUNT(*) as total FROM roles WHERE 1=1";
+    const params = [];
+
+    if (search) {
+      query += ` AND title LIKE ?`;
+      params.push(`%${search}%`);
+    }
 
     try {
-      const [rows] = await pool.execute(query);
+      const [rows] = await pool.execute(query, params);
       return rows[0].total;
     } catch (error) {
       throw error;

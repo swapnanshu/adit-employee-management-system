@@ -11,9 +11,18 @@ class EmployeeController {
    */
   static async getAllEmployees(req, res, next) {
     try {
-      const { limit, offset } = req.query;
+      const { limit, offset, search, company_id, role_id, sortBy, sortOrder } =
+        req.query;
 
-      const result = await EmployeeService.getAllEmployees({ limit, offset });
+      const result = await EmployeeService.getAllEmployees({
+        limit,
+        offset,
+        search,
+        company_id,
+        role_id,
+        sortBy,
+        sortOrder,
+      });
 
       res.status(200).json({
         success: true,
