@@ -2,7 +2,7 @@
 
 > **Advanced Microservices + Microfrontends Architecture** for Enterprise Applications
 
-A full-stack enterprise system demonstrating modern architecture patterns with independently deployable Node.js microservices and polyglot frontend modules (Angular & React).
+A full-stack enterprise ecosystem demonstrating modern architecture patterns with independently deployable Node.js microservices and polyglot frontend modules (Angular & React) seamlessly integrated via Webpack Module Federation.
 
 ---
 
@@ -20,46 +20,49 @@ This project showcases:
 
 ---
 
-## 🏗️ Architecture
+## 🏗️ System Architecture
 
-### System Diagram
+The following diagram illustrates the high-level integration between the infrastructure layers and the data flow between services:
 
 ```mermaid
-graph TD
-    subgraph Frontend ["Frontend (Vercel)"]
-        Shell["Angular Shell Application"]
-        EmpMFE["Employee MFE (Angular)"]
-        CompMFE["Company MFE (React/Vite)"]
-
-        Shell -- "fetches stats" --> CompSvc
-        Shell -- "fetches stats" --> EmpSvc
-        Shell -- "fetches stats" --> RoleSvc
-        Shell -- "Module Federation" --> EmpMFE
-        Shell -- "Module Federation" --> CompMFE
+graph TB
+    subgraph Client ["Client Layer (Vercel)"]
+        Shell["Angular 17 Shell<br/>(Host App)"]
+        subgraph MFEs ["Microfrontends"]
+            EmpMFE["Employee MFE<br/>(Angular)"]
+            CompMFE["Company MFE<br/>(React)"]
+        end
     end
 
-    subgraph Backend ["Backend (Render)"]
-        EmpSvc["Employee Service (Node/Express)"]
-        CompSvc["Company Service (Node/Express)"]
-        RoleSvc["Role Service (Node/Express)"]
-
-        EmpSvc -- "REST Local Call" --> CompSvc
-        EmpSvc -- "REST Local Call" --> RoleSvc
+    subgraph API ["Backend API Layer (Render)"]
+        EmpSvc["Employee Service<br/>(Orchestrator)"]
+        CompSvc["Company Service"]
+        RoleSvc["Role Service"]
     end
 
-    subgraph Database ["Database (Aiven)"]
-        DB1[("company_db")]
-        DB2[("employee_db")]
-        DB3[("role_db")]
-
-        CompSvc --> DB1
-        EmpSvc --> DB2
-        RoleSvc --> DB3
+    subgraph Data ["Data Persistence (Aiven)"]
+        DB_E[("Employee MySQL")]
+        DB_C[("Company MySQL")]
+        DB_R[("Role MySQL")]
     end
 
-    style Shell fill:#f9f,stroke:#333,stroke-width:2px
-    style EmpSvc fill:#bbf,stroke:#333,stroke-width:2px
-    style DB2 fill:#dfd,stroke:#333,stroke-width:2px
+    %% Connections
+    Shell -- "Dynamic Loading" --> MFEs
+    Shell -- "REST / Search" --> EmpSvc
+    Shell -- "REST / Search" --> CompSvc
+
+    EmpSvc -- "Validate Company" --> CompSvc
+    EmpSvc -- "Validate Role" --> RoleSvc
+
+    EmpSvc --> DB_E
+    CompSvc --> DB_C
+    RoleSvc --> DB_R
+
+    %% Styling
+    style Shell fill:#f0f7ff,stroke:#007bff,stroke-width:2px
+    style MFEs fill:#ffffff,stroke:#333,stroke-dasharray: 5 5
+    style API fill:#fdfaff,stroke:#6f42c1,stroke-width:2px
+    style Data fill:#f0fff4,stroke:#28a745,stroke-width:2px
 ```
 
 ---
