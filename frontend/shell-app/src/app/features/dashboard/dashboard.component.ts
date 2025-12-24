@@ -140,67 +140,6 @@ interface ApiResponse {
           </div>
         </div>
       </div>
-
-      <!-- Quick Actions -->
-      <section class="card" aria-labelledby="quick-actions-title">
-        <h2
-          id="quick-actions-title"
-          class="text-xl font-bold text-slate-900 mb-4"
-        >
-          Quick Actions
-        </h2>
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <a routerLink="/employees" class="action-card">
-            <div class="flex items-center space-x-3">
-              <div class="icon-box bg-primary-100 text-primary-600">
-                <svg
-                  class="w-5 h-5"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    d="M12 4v16m8-8H4"
-                  ></path>
-                </svg>
-              </div>
-              <div>
-                <div class="font-medium text-slate-900">Add New Employee</div>
-                <div class="text-sm text-slate-500">
-                  Create new employee record
-                </div>
-              </div>
-            </div>
-          </a>
-
-          <a routerLink="/companies" class="action-card">
-            <div class="flex items-center space-x-3">
-              <div class="icon-box bg-primary-100 text-primary-600">
-                <svg
-                  class="w-5 h-5"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    d="M12 4v16m8-8H4"
-                  ></path>
-                </svg>
-              </div>
-              <div>
-                <div class="font-medium text-slate-900">Add New Company</div>
-                <div class="text-sm text-slate-500">Register a new company</div>
-              </div>
-            </div>
-          </a>
-        </div>
-      </section>
     </div>
   `,
   styles: [
