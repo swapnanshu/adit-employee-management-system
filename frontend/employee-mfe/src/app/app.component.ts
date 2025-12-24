@@ -264,7 +264,46 @@ interface EmployeeWithDetails extends Employee {
             </tbody>
           </table>
         </div>
-        } }
+
+        <!-- Pagination Controls -->
+        @if (!loading && !error && employees.length > 0 && totalPages > 1) {
+        <div
+          class="flex flex-col sm:flex-row items-center justify-between gap-4 mt-6 px-2"
+        >
+          <div class="text-sm text-slate-600">
+            Showing
+            <span class="font-medium">{{
+              (currentPage - 1) * itemsPerPage + 1
+            }}</span>
+            to
+            <span class="font-medium">{{
+              Math.min(currentPage * itemsPerPage, totalItems)
+            }}</span>
+            of <span class="font-medium">{{ totalItems }}</span> employees
+          </div>
+          <div class="flex items-center space-x-2">
+            <button
+              (click)="onPageChange(currentPage - 1)"
+              [disabled]="currentPage === 1 || loading"
+              class="btn-secondary px-3 py-1 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              Previous
+            </button>
+            <div class="flex items-center gap-1">
+              <span class="text-sm text-slate-600 px-2">
+                Page {{ currentPage }} of {{ totalPages }}
+              </span>
+            </div>
+            <button
+              (click)="onPageChange(currentPage + 1)"
+              [disabled]="currentPage === totalPages || loading"
+              class="btn-secondary px-3 py-1 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              Next
+            </button>
+          </div>
+        </div>
+        } } }
 
         <!-- Employee Form Modal -->
         @if (showForm) {
@@ -326,6 +365,12 @@ export class AppComponent implements OnInit {
   showForm = false;
   selectedEmployee: Employee | null = null;
 
+  // Pagination State
+  currentPage = 1;
+  itemsPerPage = 10;
+  totalItems = 0;
+  Math = Math; // Support Math in template
+
   // Search & Filter State
   searchTerm = "";
   filterCompanyId = "";
@@ -360,6 +405,9 @@ export class AppComponent implements OnInit {
     this.loading = true;
     this.error = null;
 
+    const limit = this.itemsPerPage;
+    const offset = (this.currentPage - 1) * this.itemsPerPage;
+
     Promise.all([
       this.employeeService
         .getAll({
@@ -368,16 +416,21 @@ export class AppComponent implements OnInit {
           role_id: this.filterRoleId,
           sortBy: this.sortConfig.key,
           sortOrder: this.sortConfig.direction,
+          limit,
+          offset,
         })
         .toPromise(),
       this.companyService.getAll().toPromise(),
       this.roleService.getAll().toPromise(),
     ])
-      .then(([employees, companies, roles]) => {
+      .then(([employeesResponse, companies, roles]) => {
         this.companies = companies || [];
         this.roles = roles || [];
 
-        this.employees = (employees || []).map((emp) => ({
+        const employeesData = employeesResponse?.data || [];
+        this.totalItems = employeesResponse?.pagination?.total || 0;
+
+        this.employees = employeesData.map((emp) => ({
           ...emp,
           companyName: this.companies.find((c) => c.id === emp.company_id)
             ?.name,
@@ -396,12 +449,14 @@ export class AppComponent implements OnInit {
   onSearch(event: Event) {
     const input = event.target as HTMLInputElement;
     this.searchSubject.next(input.value);
+    this.currentPage = 1; // Reset to first page
   }
 
   onFilterChange(type: "company" | "role", event: Event) {
     const value = (event.target as HTMLSelectElement).value;
     if (type === "company") this.filterCompanyId = value;
     else if (type === "role") this.filterRoleId = value;
+    this.currentPage = 1; // Reset to first page
     this.loadEmployees();
   }
 
@@ -413,7 +468,17 @@ export class AppComponent implements OnInit {
       this.sortConfig.key = key;
       this.sortConfig.direction = "ASC";
     }
+    this.currentPage = 1; // Reset to first page
     this.loadEmployees();
+  }
+
+  onPageChange(page: number) {
+    this.currentPage = page;
+    this.loadEmployees();
+  }
+
+  get totalPages(): number {
+    return Math.ceil(this.totalItems / this.itemsPerPage);
   }
 
   getSortIcon(key: string): string {

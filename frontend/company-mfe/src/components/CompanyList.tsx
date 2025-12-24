@@ -17,20 +17,37 @@ export function CompanyList({ onEdit, onDelete }: CompanyListProps) {
     direction: "ASC" | "DESC";
   }>({ key: "created_at", direction: "DESC" });
 
+  // Pagination State
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage] = useState(10);
+  const [totalItems, setTotalItems] = useState(0);
+
+  useEffect(() => {
+    // Reset to first page when search changes
+    setCurrentPage(1);
+  }, [searchTerm, sortConfig]);
+
   useEffect(() => {
     loadCompanies();
-  }, [searchTerm, sortConfig]);
+  }, [searchTerm, sortConfig, currentPage]);
 
   const loadCompanies = async () => {
     try {
       setLoading(true);
       setError(null);
-      const data = await companyService.getAll({
+      const limit = itemsPerPage;
+      const offset = (currentPage - 1) * itemsPerPage;
+
+      const response = await companyService.getAll({
         search: searchTerm,
         sortBy: sortConfig.key,
         sortOrder: sortConfig.direction,
+        limit,
+        offset,
       });
-      setCompanies(data);
+
+      setCompanies(response.data || []);
+      setTotalItems(response.pagination?.total || 0);
     } catch (err) {
       setError("Failed to load companies. Please try again.");
       console.error("Error loading companies:", err);
@@ -45,6 +62,8 @@ export function CompanyList({ onEdit, onDelete }: CompanyListProps) {
       direction: prev.key === key && prev.direction === "ASC" ? "DESC" : "ASC",
     }));
   };
+
+  const totalPages = Math.ceil(totalItems / itemsPerPage);
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString("en-US", {
@@ -88,7 +107,7 @@ export function CompanyList({ onEdit, onDelete }: CompanyListProps) {
           <input
             type="text"
             placeholder="Search by company name..."
-            className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none transition-all"
+            className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none transition-all shadow-sm"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
           />
@@ -141,78 +160,120 @@ export function CompanyList({ onEdit, onDelete }: CompanyListProps) {
           </p>
         </div>
       ) : (
-        <div className="overflow-x-auto">
-          <table
-            className="min-w-full bg-white border border-slate-200 rounded-lg"
-            aria-label="Companies List"
-          >
-            <thead className="bg-slate-50 border-b border-slate-200">
-              <tr>
-                <th
-                  className="px-6 py-3 text-left text-xs font-medium text-slate-700 uppercase tracking-wider cursor-pointer hover:bg-slate-100 transition-colors"
-                  onClick={() => handleSort("name")}
-                >
-                  Company Name <SortIcon column="name" />
-                </th>
-                <th
-                  className="px-6 py-3 text-left text-xs font-medium text-slate-700 uppercase tracking-wider cursor-pointer hover:bg-slate-100 transition-colors"
-                  onClick={() => handleSort("industry")}
-                >
-                  Industry <SortIcon column="industry" />
-                </th>
-                <th
-                  className="px-6 py-3 text-left text-xs font-medium text-slate-700 uppercase tracking-wider cursor-pointer hover:bg-slate-100 transition-colors"
-                  onClick={() => handleSort("created_at")}
-                >
-                  Created <SortIcon column="created_at" />
-                </th>
-                <th className="px-6 py-3 text-right text-xs font-medium text-slate-700 uppercase tracking-wider">
-                  Actions
-                </th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-200">
-              {companies.map((company) => (
-                <tr
-                  key={company.id}
-                  className="hover:bg-slate-50 transition-colors"
-                >
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm font-medium text-slate-900">
-                      {company.name}
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm text-slate-600">
-                      {company.industry}
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm text-slate-600">
-                      {formatDate(company.created_at)}
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                    <button
-                      onClick={() => onEdit(company)}
-                      className="text-primary-600 hover:text-primary-900 mr-4 focus:outline-none focus:underline"
-                      aria-label={`Edit ${company.name}`}
-                    >
-                      Edit
-                    </button>
-                    <button
-                      onClick={() => onDelete(company.id)}
-                      className="text-red-600 hover:text-red-900 focus:outline-none focus:underline"
-                      aria-label={`Delete ${company.name}`}
-                    >
-                      Delete
-                    </button>
-                  </td>
+        <>
+          <div className="overflow-x-auto">
+            <table
+              className="min-w-full bg-white border border-slate-200 rounded-lg"
+              aria-label="Companies List"
+            >
+              <thead className="bg-slate-50 border-b border-slate-200">
+                <tr>
+                  <th
+                    className="px-6 py-3 text-left text-xs font-medium text-slate-700 uppercase tracking-wider cursor-pointer hover:bg-slate-100 transition-colors"
+                    onClick={() => handleSort("name")}
+                  >
+                    Company Name <SortIcon column="name" />
+                  </th>
+                  <th
+                    className="px-6 py-3 text-left text-xs font-medium text-slate-700 uppercase tracking-wider cursor-pointer hover:bg-slate-100 transition-colors"
+                    onClick={() => handleSort("industry")}
+                  >
+                    Industry <SortIcon column="industry" />
+                  </th>
+                  <th
+                    className="px-6 py-3 text-left text-xs font-medium text-slate-700 uppercase tracking-wider cursor-pointer hover:bg-slate-100 transition-colors"
+                    onClick={() => handleSort("created_at")}
+                  >
+                    Created <SortIcon column="created_at" />
+                  </th>
+                  <th className="px-6 py-3 text-right text-xs font-medium text-slate-700 uppercase tracking-wider">
+                    Actions
+                  </th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+              </thead>
+              <tbody className="divide-y divide-slate-200">
+                {companies.map((company) => (
+                  <tr
+                    key={company.id}
+                    className="hover:bg-slate-50 transition-colors"
+                  >
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="text-sm font-medium text-slate-900">
+                        {company.name}
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="text-sm text-slate-600">
+                        {company.industry}
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="text-sm text-slate-600">
+                        {formatDate(company.created_at)}
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                      <button
+                        onClick={() => onEdit(company)}
+                        className="text-primary-600 hover:text-primary-900 mr-4 focus:outline-none focus:underline"
+                        aria-label={`Edit ${company.name}`}
+                      >
+                        Edit
+                      </button>
+                      <button
+                        onClick={() => onDelete(company.id)}
+                        className="text-red-600 hover:text-red-900 focus:outline-none focus:underline"
+                        aria-label={`Delete ${company.name}`}
+                      >
+                        Delete
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          {/* Pagination Controls */}
+          {totalPages > 1 && (
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-4 px-2 py-3 border-t border-slate-100">
+              <div className="text-sm text-slate-600">
+                Showing{" "}
+                <span className="font-medium">
+                  {(currentPage - 1) * itemsPerPage + 1}
+                </span>{" "}
+                to{" "}
+                <span className="font-medium">
+                  {Math.min(currentPage * itemsPerPage, totalItems)}
+                </span>{" "}
+                of <span className="font-medium">{totalItems}</span> companies
+              </div>
+              <div className="flex items-center space-x-2">
+                <button
+                  onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                  disabled={currentPage === 1 || loading}
+                  className="btn-secondary px-3 py-1 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  Previous
+                </button>
+                <div className="flex items-center gap-1">
+                  <span className="text-sm text-slate-600 px-2">
+                    Page {currentPage} of {totalPages}
+                  </span>
+                </div>
+                <button
+                  onClick={() =>
+                    setCurrentPage((p) => Math.min(totalPages, p + 1))
+                  }
+                  disabled={currentPage === totalPages || loading}
+                  className="btn-secondary px-3 py-1 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  Next
+                </button>
+              </div>
+            </div>
+          )}
+        </>
       )}
     </div>
   );

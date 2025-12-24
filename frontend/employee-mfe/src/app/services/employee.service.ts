@@ -24,8 +24,10 @@ export class EmployeeService {
       role_id?: string;
       sortBy?: string;
       sortOrder?: string;
+      limit?: number;
+      offset?: number;
     } = {}
-  ): Observable<Employee[]> {
+  ): Observable<ApiResponse<Employee[]>> {
     let httpParams = new HttpParams();
     if (params.search) httpParams = httpParams.set("search", params.search);
     if (params.company_id)
@@ -34,10 +36,14 @@ export class EmployeeService {
     if (params.sortBy) httpParams = httpParams.set("sortBy", params.sortBy);
     if (params.sortOrder)
       httpParams = httpParams.set("sortOrder", params.sortOrder);
+    if (params.limit !== undefined)
+      httpParams = httpParams.set("limit", params.limit.toString());
+    if (params.offset !== undefined)
+      httpParams = httpParams.set("offset", params.offset.toString());
 
-    return this.http
-      .get<ApiResponse<Employee[]>>(this.apiUrl, { params: httpParams })
-      .pipe(map((response) => response.data || []));
+    return this.http.get<ApiResponse<Employee[]>>(this.apiUrl, {
+      params: httpParams,
+    });
   }
 
   getById(id: string): Observable<Employee> {
