@@ -54,9 +54,9 @@ interface EmployeeWithDetails extends Employee {
         </div>
 
         <!-- Search and Filters -->
-        <div class="mb-6 flex flex-col md:flex-row gap-4">
+        <div class="mb-6 flex flex-col md:flex-row md:items-center gap-4">
           <!-- Search -->
-          <div class="relative flex-1">
+          <div class="relative w-full md:max-w-sm">
             <input
               type="text"
               placeholder="Search employees..."
@@ -80,7 +80,7 @@ interface EmployeeWithDetails extends Employee {
           </div>
 
           <!-- Company Filter -->
-          <div class="w-full md:w-64">
+          <div class="w-full md:w-56">
             <select
               (change)="onFilterChange('company', $event)"
               class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none transition-all shadow-sm bg-white"
@@ -94,7 +94,7 @@ interface EmployeeWithDetails extends Employee {
           </div>
 
           <!-- Role Filter -->
-          <div class="w-full md:w-64">
+          <div class="w-full md:w-56">
             <select
               (change)="onFilterChange('role', $event)"
               class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none transition-all shadow-sm bg-white"
